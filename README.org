@@ -1,0 +1,97 @@
+#+BEGIN_COMMENT
+MIT License
+
+Copyright (c) 2019 Freja Nordsiek
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+#+END_COMMENT
+
+#+STARTUP: inlineimages:t
+#+OPTIONS: tex:t latex:t
+
+#+AUTHOR: Freja Nordsiek
+#+TITLE: NumeriCL
+#+EMAIL: fnordsie@posteo.net
+#+LANGUAGE: en
+#+DESCRIPTION: NumeriCL's README.
+#+KEYWORDS: NumeriCL numerics array math
+
+#+HTML_DOCTYPE: html5
+
+#+LATEX_CLASS_OPTIONS: [a4paper]
+#+LATEX_HEADER: \usepackage[utf8]{inputenc}
+#+LATEX_HEADER: \usepackage[a4paper,margin=1.5cm]{geometry}
+#+LATEX_HEADER: \usepackage{xcolor}
+
+#+BEGIN_COMMENT
+Have to set things up for code display with listings. Minted is straightforward
+in comparison in that the desired options can be set globally. listings is not
+because it does not seem to be possible to set the options to use in \lstset
+globally without invoking elisp commands. But, \lstset can be redefined in
+LaTeX to pass certain options first, which is what is done here.
+
+Using listings must also be set with a bind.
+#+END_COMMENT
+
+#+BIND: org-latex-listings 'listings
+
+#+LATEX_HEADER: \usepackage{listings}
+#+LATEX_HEADER: \definecolor{mygreen}{rgb}{0,0.4,0}
+#+LATEX_HEADER: \definecolor{myred}{rgb}{0.7,0,0}
+#+LATEX_HEADER: \definecolor{myblue}{rgb}{0,0,0.7}
+#+LATEX_HEADER: \definecolor{mygreyblue}{rgb}{0.3,0.3,0.5}
+#+LATEX_HEADER: \let\OldLstset\lstset
+#+LATEX_HEADER: \renewcommand{\lstset}[1]{\OldLstset{columns=[c]fixed,basicstyle=\scriptsize\ttfamily,numbers=left,showstringspaces=false,showspaces=false,frame=single,keepspaces=true,numbersep=10pt,numberstyle=\tiny,commentstyle=\color{mygreyblue}\scriptsize\ttfamily\itshape,keywordstyle=\color{mygreen}\scriptsize\ttfamily\bfseries,stringstyle=\color{myred}\scriptsize\ttfamily,identifierstyle=\color{myblue}\scriptsize\ttfamily,#1}}
+
+#+MACRO: color @@latex:\textcolor{$1}{$2}@@@@html:<span style="color: $1">$2<\span>@@
+
+
+* Introduction
+
+  NumeriCL is *NOT* ready for use yet.
+
+  NumeriCL is a Common Lisp library for working with numerical data in arrays.
+  It borrows a lot of ideas from {{{numpy}}} and is meant to work somewhat similarly, though its API and internals deviate in many ways and it doesn't have the wide range of capabilities and features that {{{numpy}}} has.
+  It mainly tries to match the capabilities of {{{numpy}}}'s [[https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html][ndarray]] type, rather the full {{{numpy}}} API.
+  For a CL library that follows the {{{numpy}}} API much more faithfully, consider [[https://github.com/numcl/numcl][Numcl]].
+  NumeriCL is licensed under the permissive [[https://opensource.org/licenses/MIT][MIT license]].
+
+* Dependencies
+
+  NumeriCL has the following direct dependencies:
+
+  + [[https://common-lisp.net/project/asdf][ASDF]]
+
+  NumeriCL's unittests have the following additional direct dependencies:
+
+  + [[https://github.com/fukamachi/prove][prove]]
+
+* Tangling/Extracting Code
+
+  NumeriCL is written in [[https://wikipedia.org/wiki/Literate_programming][Literate Programming]] form/style using [[https://www.gnu.org/software/emacs][Emacs]] [[https://orgmode.org][Org Mode]].
+  The code and documentation are weaved/combined in the file [[file:docs/numericl.org]].
+  The source code can be tangled (the [[https://wikipedia.org/wiki/Literate_programming][Literate Programming]] for extracting the code) from the documentation by one of two methods.
+  The file can be opened in [[https://www.gnu.org/software/emacs][Emacs]] and then one types the keyboard sequence =C-c C-v t= (where =C= is usually the =Ctrl= key).
+  Or the following command can be run on the command line from inside the =docs= subdirectory.
+
+  #+BEGIN_SRC bash
+emacs --batch -l org numericl.org -f org-babel-tangle
+  #+END_SRC
+
+* TODO Installation

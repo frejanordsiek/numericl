@@ -1,0 +1,3145 @@
+#+BEGIN_COMMENT
+MIT License
+
+Copyright (c) 2019 Freja Nordsiek
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+#+END_COMMENT
+
+#+STARTUP: inlineimages:t
+#+OPTIONS: tex:t latex:t author:t creator:nil
+#+OPTIONS: H:4 toc:t toc:3 title:t section-numbers:t num:t html-preamble:t f:t email:t
+
+#+BIND: org-html-coding-system 'utf-8-unix
+
+#+AUTHOR: Freja Nordsiek
+#+TITLE: NumeriCL Documentation
+#+EMAIL: fnordsie@posteo.net
+#+LANGUAGE: en
+#+DESCRIPTION: NumeriCL's documentation for how to use it, how it works, and its code.
+#+KEYWORDS: NumeriCL numerics array math
+
+#+HTML_DOCTYPE: html5
+#+HTML_MATHJAX: path:"MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+
+#+LATEX_CLASS_OPTIONS: [a4paper]
+#+LATEX_HEADER: \usepackage[utf8]{inputenc}
+#+LATEX_HEADER: \usepackage[a4paper,margin=1.5cm]{geometry}
+#+LATEX_HEADER: \usepackage{xcolor}
+
+#+BEGIN_COMMENT
+Have to set things up for code display with listings. Minted is straightforward
+in comparison in that the desired options can be set globally. listings is not
+because it does not seem to be possible to set the options to use in \lstset
+globally without invoking elisp commands. But, \lstset can be redefined in
+LaTeX to pass certain options first, which is what is done here.
+
+Using listings must also be set with a bind.
+#+END_COMMENT
+
+#+BIND: org-latex-listings 'listings
+
+#+LATEX_HEADER: \usepackage{listings}
+#+LATEX_HEADER: \definecolor{mygreen}{rgb}{0,0.4,0}
+#+LATEX_HEADER: \definecolor{myred}{rgb}{0.7,0,0}
+#+LATEX_HEADER: \definecolor{myblue}{rgb}{0,0,0.7}
+#+LATEX_HEADER: \definecolor{mygreyblue}{rgb}{0.3,0.3,0.5}
+#+LATEX_HEADER: \let\OldLstset\lstset
+#+LATEX_HEADER: \renewcommand{\lstset}[1]{\OldLstset{columns=[c]fixed,basicstyle=\scriptsize\ttfamily,numbers=left,showstringspaces=false,showspaces=false,frame=single,keepspaces=true,numbersep=10pt,numberstyle=\tiny,commentstyle=\color{mygreyblue}\scriptsize\ttfamily\itshape,keywordstyle=\color{mygreen}\scriptsize\ttfamily\bfseries,stringstyle=\color{myred}\scriptsize\ttfamily,identifierstyle=\color{myblue}\scriptsize\ttfamily,#1}}
+
+
+#+LATEX_HEADER: \usepackage{amssymb}
+#+LATEX_HEADER: \DeclareUnicodeCharacter{2713}{\ensuremath{\checkmark}}
+#+LATEX_HEADER: \DeclareUnicodeCharacter{25B3}{\ensuremath{\vartriangle}}
+
+#+MACRO: color @@latex:\textcolor{$1}{$2}@@@@html:<span style="color: $1">$2<\span>@@
+
+#+MACRO: literate-programming [[https://wikipedia.org/wiki/Literate_programming][Literate Programming]]
+#+MACRO: emacs [[https://www.gnu.org/software/emacs][Emacs]]
+#+MACRO: orgmode [[https://orgmode.org][Org Mode]]
+
+#+MACRO: asdf [[https://common-lisp.net/project/asdf][ASDF]]
+#+MACRO: numpy [[https://www.numpy.org][NumPy]]
+#+MACRO: blas [[https://www.netlib.org/blas][BLAS]]
+#+MACRO: lapack [[https://www.netlib.org/lapack][LAPACK]]
+
+#+MACRO: sbcl [[http://sbcl.org][SBCL]]
+#+MACRO: ccl [[https://ccl.clozure.com][CCL]]
+#+MACRO: ecl [[https://common-lisp.net/project/ecl][ECL]]
+#+MACRO: clisp [[https://www.gnu.org/software/clisp][CLISP]]
+#+MACRO: abcl [[https://common-lisp.net/project/armedbear][ABCL]]
+#+MACRO: clasp [[https://github.com/clasp-developers/clasp][Clasp]]
+#+MACRO: cmucl [[https://common-lisp.net/project/cmucl][CMUCL]]
+#+MACRO: corman [[https://github.com/sharplispers/cormanlisp][Corman Lisp]]
+#+MACRO: allegrocl [[https://franz.com/products/allegro-common-lisp][Allegro CL]]
+#+MACRO: lispworks [[http://www.lispworks.com/products/lispworks.html][LispWorks]]
+
+#+MACRO: hspec [[http://l1sp.org/cl/$1][$1]]
+
+#+MACRO: quickdocs [[http://quickdocs.org/$1][Quickdocs:$1]]
+#+MACRO: quickref [[https://quickref.common-lisp.net/$1.html][Quickref:$1]]
+
+* Introduction
+
+  NumeriCL is *NOT* ready for use yet.
+
+  NumeriCL is a Common Lisp library for working with numerical data in arrays.
+  It borrows a lot of ideas from {{{numpy}}} and is meant to work somewhat similarly, though its API and internals deviate in many ways and it doesn't have the wide range of capabilities and features that {{{numpy}}} has.
+  It mainly tries to match the capabilities of {{{numpy}}}'s [[https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html][ndarray]] type, rather the full {{{numpy}}} API.
+  For a CL library that follows the {{{numpy}}} API much more faithfully, consider [[https://github.com/numcl/numcl][Numcl]].
+
+* TODO Installation
+
+  The dependencies of this library are:
+
+  + {{{asdf}}}
+
+  The unit tests depend on the same libraries in addition to:
+
+  + [[https://github.com/fukamachi/prove][prove]]
+
+  This library is developed and tesed on the following CL implementations:
+
+  + {{{sbcl}}}
+  + {{{ecl}}}
+  + {{{ccl}}}
+
+* Numbers <<numbers>>
+
+  This library is meant to work with numbers, though many array utilities will work with array elements which are not numbers of any sort.
+  We use CL's builtin {{{hspec(number)}}} type and its subtypes as the basis for numbers.
+  CL provides the essential types needed for most math along with several math operations on them.
+  Though care has to be done with complex numbers since {{{hspec(rational)}}} complex numbers get converted to real types if their imaginary part is zero.
+  Several aliases are defined for particular subtypes, namely for the standard C integer types and their complex counterparts.
+
+  #+NAME: table:number-types
+  #+CAPTION: The different real types and their real and complex aliases.
+  #+ATTR_HTML: :border 2 :rules all :frame border
+  #+ATTR_LATEX: :float t
+  | Real Type          | Real Alias       | Complex Alias            |
+  |--------------------+------------------+--------------------------|
+  | integer            | cl:integer       | complex-integer          |
+  | unsigned-integer   | unsigned-integer | complex-unsigned-integer |
+  | fixnum             | cl:fixnum        | complex-fixnum           |
+  | unsigned-fixnum    | unsigned-fixnum  | complex-unsigned-fixnum  |
+  | bit                | cl:bit           | complex-bit              |
+  | unsigned-byte      | cl:unsigned-byte | complex-unsigned-byte    |
+  | signed-byte        | cl:signed-byte   | complex-signed-byte      |
+  | (unsigned-byte 8)  | uint8            | complex-uint8            |
+  | (unsigned-byte 16) | uint16           | complex-uint16           |
+  | (unsigned-byte 32) | uint32           | complex-uint32           |
+  | (unsigned-byte 64) | uint64           | complex-uint64           |
+  | (signed-byte 8)    | int8             | complex-int8             |
+  | (signed-byte 16)   | int16            | complex-int16            |
+  | (signed-byte 32)   | int32            | complex-int32            |
+  | (signed-byte 64)   | int64            | complex-int64            |
+  | rational           | cl:rational      | complex-rational         |
+  | float              | cl:float         | complex-float            |
+  | short-float        | cl:short-float   | complex-short-float      |
+  | single-float       | cl:single-float  | complex-single-float     |
+  | double-float       | cl:double-float  | complex-double-float     |
+  | long-float         | cl:long-float    | complex-long-float       |
+  | real               | cl:real          | complex-number           |
+  |                    |                  | cl:number                |
+
+  /complex-number/ and {{{hspec(number)}}} are special and their difference has to be spelled out.
+  {{{hspec(number)}}} includes all number types.
+  But /complex-number/ includes only {{{hspec(complex)}}} and things that get converted to real when their imaginary part is zero ({{{hspec(rational)}}}).
+  In a sense, /complex-number/ is strictly complex.
+
+  Some functions and macros require the desired type to be passed.
+  They can also be given the type as a {{{hspec(string)}}} or {{{hspec(keyword)}}}, though obviously they cannot take arguments in this form.
+
+  The type hierarchy is shown in Figure [[fig:number-types-inheritance-tree]].
+
+  #+NAME: make-number-types-inheritance-tree-dot-file
+  #+BEGIN_SRC lisp :results value replace :cache no :exports none
+(let ((*standard-output* (make-broadcast-stream))
+      (*error-output* (make-broadcast-stream)))
+  (asdf:load-systems :numericl)
+  (funcall (symbol-function (find-symbol "MAKE-NUMBER-TYPE-GRAPHVIZ-DIAGRAM" 'numericl))))
+  #+END_SRC
+
+  #+NAME: draw-number-types-inheritance-tree
+  #+BEGIN_SRC dot :file images/number-types-inheritance-tree.png :exports results :cache no :var input=make-number-types-inheritance-tree-dot-file
+$input
+  #+END_SRC
+
+  #+CAPTION: Type hierarchy of all number types used in NumeriCL.
+  #+NAME: fig:number-types-inheritance-tree
+  #+ATTR_LATEX: :width \textwidth
+  #+ATTR_HTML: :width 100% :alt Subtype hierarchy of the various number types used in NumeriCL.
+  #+RESULTS: draw-number-types-inheritance-tree
+  [[file:images/number-types-inheritance-tree.png]]
+
+
+* Arrays
+
+** Underlying Storage
+
+   NumeriCL uses CL's standard {{{hspec(array)}}} type specialized on subtypes of {{{hspec(number)}}} as arrays, but provides ways to work with them beyond the ANSI standard.
+   This means that NumeriCL can easily be used with data from or for other libraries.
+   But there are limitations on CL's arrays that require an additional wrapping type.
+   One, the {{{hspec(upgraded-array-element-type)}}} of many of the types in Table [[table:number-types]] on a given implementation may not actually be that particular type and are instead superclasses (and in the worst case, /t/).
+   Two, ANSI CL provides only a minimal way to get views of arrays through displaced arrays.
+   NumeriCL provides a wrapping type, [[type:view][view]], that keeps type information when the {{{hspec(upgraded-array-element-type)}}} for desired specialized type is not that type, allows arbitrary striding, and also doubles as views.
+
+** Striding
+
+   The [[type:view][view]] type stores and uses the separate stride for each dimension in the array, an offset just like in displaced arrays, and the underlying array or [[type:view][view]] that is storing the array elements.
+   The limitations on the {{{hspec(array)}}} type are avoided by allowing the strides to be set; which allows things like
+
+   + non-contiguous access
+   + CL/C or Fortran ordering, or more arbitrary ordering
+   + reversed array views
+   + diagonal views on a matrix
+   + selecting one or more row, column, page, etc.
+   + row, column, page, and/or etc. skips
+
+   This goes further than the ~INCX~ and ~LDA~ and co. arguments in {{{blas}}} and {{{lapack}}}.
+   They only allow striding on at most one dimension for an array as no {{{blas}}} function for matrices allows an ~INCX~ and a ~LDA~ for a matrix.
+   Here, striding is allowed on all dimensions, much like {{{numpy}}}.
+
+** Indexing
+
+   This library does indexing just like {{{hspec(aref)}}} in that it is zero indexed (CL/C style arrays rather than Fortran style), and is row-majored by default (but other orderings are allowed through using different strides).
+   Two different {{{hspec(aref)}}}-like indexing functions/setf-expanders are provided that work on arrays, views, and even scalars.
+   They are ~naref~ and ~baref~.
+   The difference between them is how they behave when given indices outside of the array's range.
+   Normal aref (~naref~) works just like {{{hspec(aref)}}} in that it raises an error for indices outside of the array's range, except that zero indices are allowed for dimensions higher than the array's rank and indices that are not provided are treated as zero.
+
+   Broadcast aref (~baref~) wraps indices around, allowing broadcasting.
+   It does ~(mod dim-index dim-length)~ on each dimension index ~dim-index~ with the length along that dimension ~dim-length~.
+   Note that indices for dimensions higher than the rank of the array are all mapped to zero.
+   This means that for a 2x3 array ~arr~, ~(baref arr 5 -8 3)~ is equivalent to ~(aref arr 1 1)~.
+   This indexing scheme is inspired by how [[https://www.python.org][Python]] uses negative indices but extends it to continually wrap past the ends in both the positive and negative directions for arbitrarily large indices.
+   Many math operations in this library use ~baref~.
+
+   There are similar versions for flat indexing, ~flat-naref~ and ~flat-baref~.
+   This is equivalent to ~row-major-aref~ for arrays, but the different name reflects how views don't force row-major indexing.
+
+
+** TODO Slicing, Masks, And Views
+** TODO Creating
+** TODO Transformations
+** TODO Element-wise Operations
+** TODO Reduction Operations
+* TODO Linear Algebra
+
+* Code
+
+** Tangling/Extracting The Code
+
+  NumeriCL is written in {{{literate-programming}}} form/style using {{{emacs}}} {{{orgmode}}}.
+  The code and documentation are weaved/combined in this file.
+  The source code can be tangled (the {{{literate-programming}}} for extracting the code) from the documentation by one of two methods.
+  The file can be opened in {{{emacs}}} and then one types the keyboard sequence =C-c C-v t= (where =C= is usually the =Ctrl= key).
+  Or the following command can be run on the command line from inside the =docs= subdirectory.
+
+  #+BEGIN_SRC bash
+emacs --batch -l org numericl.org -f org-babel-tangle
+  #+END_SRC
+
+
+** Common Header for All Code
+
+   All code has the same copyright header.
+
+   #+NAME: copyright
+   #+BEGIN_SRC lisp -n
+;;;; MIT License
+;;;;
+;;;; Copyright (c) 2019 Freja Nordsiek
+;;;;
+;;;; Permission is hereby granted, free of charge, to any person obtaining a copy
+;;;; of this software and associated documentation files (the "Software"), to deal
+;;;; in the Software without restriction, including without limitation the rights
+;;;; to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+;;;; copies of the Software, and to permit persons to whom the Software is
+;;;; furnished to do so, subject to the following conditions:
+;;;;
+;;;; The above copyright notice and this permission notice shall be included in all
+;;;; copies or substantial portions of the Software.
+;;;;
+;;;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+;;;; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+;;;; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+;;;; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+;;;; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+;;;; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+;;;; SOFTWARE.
+   #+END_SRC
+
+   Most code is optimized for safety and debugability with the following declaimation.
+   This tells the compiler that more run-time checks are desired and that it should optimize for debugability when compiling.
+   This is generally at the expense of speed and size since their default quality values are typically one.
+   See {{{hspec(optimize)}}}.
+   Note that the implementation may not actually use these, but many do.
+
+   #+NAME: optimize-safety
+   #+BEGIN_SRC lisp -n
+(declaim (optimize (safety 3) (debug 3) (compilation-speed 0)))
+   #+END_SRC
+
+
+** ASDF File numericl.asd
+
+   The ASDF file tells {{{asdf}}} how to load the system (collection of packages) along with useful metadata.
+   First, the system is defined with the basic metadata
+
+   #+NAME: asdf-metadata
+   #+BEGIN_SRC lisp -n
+(asdf:defsystem "numericl"
+  :description
+  "Array indexing, slicing, manipulation, etc. beyond the ANSI standard with math utilities."
+  :version "0.1"
+  :author "Freja Nordsiek"
+  :license "MIT"
+   #+END_SRC
+
+   And then the other systems it directly depends on are defined.
+   Those systems will pull in their dependencies, so indirect dependencies do not have to be listed.
+
+   #+NAME: asdf-dependencies
+   #+BEGIN_SRC lisp -n
+  :depends-on ()
+   #+END_SRC
+
+   The files (also known as components) that comprise the system have to be defined along with how they depend on each other.
+   Rather than use ~:serial t~ to say that each component depends on all the previous, the dependencies are being explicitly listed.
+
+   #+NAME: asdf-components
+   #+BEGIN_SRC lisp -n
+  :pathname "src"
+  :components ((:file "package")
+               (:file "numerical" :depends-on ("package")))
+   #+END_SRC
+
+   The unit tests (done using the {{{quickdocs(prove)}}} package) test operation is added following [[https://github.com/fukamachi/prove][prove]]'s documentation on ASDF integration.
+
+   #+NAME: asdf-testing
+   #+BEGIN_SRC lisp -n
+  :in-order-to ((test-op (test-op numericl-tests)))
+   #+END_SRC
+
+   Putting all of these together, the complete ASDF file =numericl.asd= is made.
+
+   #+NAME: numericl-dot-asd
+   #+BEGIN_SRC lisp -n :noweb yes :tangle ../numericl.asd
+;;;; numericl.asd
+
+<<copyright>>
+
+<<asdf-metadata>>
+<<asdf-dependencies>>
+<<asdf-components>>
+<<asdf-testing>>)
+   #+END_SRC
+
+
+** Generic Typed List and Vector Checking
+
+   Many functions and methods in this library require arguments to be proper {{{hspec(list)}}}s or {{{hspec(vector)}}}s where every element is a particular type, and it is important to check this.
+   Unfortunately, there doesn't seem to be a way to be able to define a typed list with
+
+   + a program provided length rather than a fixed length (it might be possible, but I have not been able to figure out a macro to do it)
+   + a program provided type but variable length
+
+   But, a {{{hspec(check-type)}}} like macro can be made that can at least check it and offer the chance to change it if it is invalid.
+   It will check that the argument is a proper list and that all elements are the given type, but allow any length.
+   And while we are at it, we can make a similar macro that works for typed proper lists and vectors instead of just lists.
+   The macros expand into an {{{hspec(assert)}}} statement that checks that it is a proper-list or proper-list or vector and then the types of all the elements.
+   Note that ~nil~ is considered to pass both.
+
+   First, we need a condition to represent typed list and vector errors.
+
+   #+NAME: typed-sequence-type-error
+   #+BEGIN_SRC lisp -n
+;;; Condition for typed sequence errors.
+
+(define-condition typed-sequence-type-error (error)
+  ((datum :initarg :datum :initform nil
+          :reader typed-sequence-type-error-datum)
+   (datum-name :initarg :datum-name :initform nil
+               :reader typed-sequence-type-error-datum-name
+               :type (or symbol null))
+   (expected-sequence-type :initarg :expected-sequence-type :initform 'sequence
+                           :reader typed-sequence-type-error-expected-sequence-type)
+   (expected-element-type :initarg :expected-element-type :initform t
+                          :reader typed-sequence-type-error-expected-element-type))
+  (:report (lambda (condition stream)
+             (let ((*print-circle* t)
+                   (datum (typed-sequence-type-error-datum condition))
+                   (name (typed-sequence-type-error-datum-name condition))
+                   (exp-seq-type (typed-sequence-type-error-expected-sequence-type condition))
+                   (exp-el-type (typed-sequence-type-error-expected-element-type condition)))
+               (if name
+                   (format stream "~a should be a ~a of ~s, but was~%~s"
+                           name exp-seq-type exp-el-type datum)
+                   (format stream "~s~%was not a ~a of ~s."
+                           datum exp-seq-type exp-el-type)))))
+  (:documentation
+   "Error for a situation in which an object is not a particular kind of typed
+    sequence where all elements have a particular type.
+
+    ,* Slots
+      + ~DATUM~ :: The offending datum. Initialized with the ~:datum~ argument
+        and read by ~typed-sequence-type-error-datum~.
+      + ~DATUM-NAME~ :: The symbol name (or ~nil~ if not known) of the offending
+        datum. Initialized with the ~:datum-name~ argument and read by
+        ~typed-sequence-type-error-datum-name~
+      + ~EXPECTED-SEQUENCE-TYPE~ :: The expected kind of sequence. Initialized
+        with the ~:expected-sequence-type~ argument and read by
+        ~typed-sequence-type-error-expected-sequence-type~
+      + ~EXPECTED-ELEMENT-TYPE~ :: The expected element type. Initialized with
+        the ~:expected-element-type~ argument and read by
+        ~typed-sequence-type-error-expected-element-type~"))
+   #+END_SRC
+
+   Then we can make the checking macros.
+   While we are at it, we can make predicate functions that determine if something is a typed list or {{{hspec(vector)}}} using the same checks.
+
+   #+NAME: check-typed-lists-vectors
+   #+BEGIN_SRC lisp -n
+;;; Macros to check that something is a list or vector where all
+;;; elements have a given type.
+
+(defmacro check-typed-list (obj &optional (type t))
+  "Checks that ~OBJ~ is a valid /proper-list/ where all elements have the given
+   ~TYPE~ and raises a continuable error otherwise that allows the user to
+   enter a valid list to replace the current contents of ~OBJ~ with.
+
+   ,* Arguments
+     + ~OBJ~ :: /place/ to check the type of.
+     + ~TYPE~ :: /typespec/ for the exected element types.
+
+   ,* Correctable Errors
+     + /typed-sequence-type-error/ :: If ~OBJ~ is not a typed /proper-list/ with
+       all elements having the specified element type."
+  (let ((type-name (gensym))
+        (obj-name obj))
+    ;; While doing the assert, we need to protect against circular lists causing
+    ;; execution to hang.
+    `(let ((*print-circle* t)
+           (,type-name ,type))
+       (assert (and (typep ,obj 'list)
+                    ;; list-length returns nil for circular lists.
+                    (list-length ,obj)
+                    (not (member-if #'(lambda (x) (not (typep x ,type-name))) ,obj)))
+               (,obj)
+               'typed-sequence-type-error
+               :datum ,obj :datum-name ',obj-name
+               :expected-sequence-type "proper-list"
+               :expected-element-type ,type-name))))
+
+(defmacro check-typed-listvec (obj &optional (type t))
+  "Checks that ~OBJ~ is a valid /proper-list/ or /vector/ where all elements
+   have the given ~TYPE~ and raises a continuable error otherwise that allows
+   the user to enter a valid list to replace the current contents of ~OBJ~ with.
+
+   ,* Arguments
+     + ~OBJ~ :: /place/ to check the type of.
+     + ~TYPE~ :: /typespec/ for the exected element types.
+
+   ,* Correctable Errors
+     + /typed-sequence-type-error/ :: If ~OBJ~ is not a typed /proper-list/ or
+       /vector/ with all elements having the specified element type."
+  (let ((type-name (gensym))
+        (obj-name obj))
+    ;; While doing the assert, we need to protect against circular lists causing
+    ;; execution to hang.
+    `(let ((*print-circle* t)
+           (,type-name ,type))
+       (assert (and (typep ,obj '(or cons null vector))
+                    ;; Check that lists are not circular.
+                    (or (not (listp ,obj))
+                        (list-length ,obj))
+                    (not (position-if #'(lambda (x) (not (typep x ,type-name))) ,obj)))
+               (,obj)
+               'typed-sequence-type-error
+               :datum ,obj :datum-name ',obj-name
+               :expected-sequence-type "proper-list or vector"
+               :expected-element-type ,type-name))))
+
+;; Predicate functions to determine if something is a typed list or vector.
+
+(declaim (ftype (function (t &optional t) boolean) typed-list-p))
+(defun typed-list-p (obj &optional (type t))
+  "Predicate that returns whether ~OBJ~ is a valid /proper-list/ where all
+   elements have the given ~TYPE~.
+
+   ,* Arguments
+     + ~OBJ~ :: Object to check the type of.
+     + ~TYPE~ :: /typespec/ for the exected element types.
+
+   ,* Returns
+     + ~YES-NO~ :: /generalized-boolean/ indicating whether ~OBJ~ is the proper
+       type or not."
+  (and (typep obj 'list)
+       ;; list-length returns nil for circular lists.
+       (list-length obj)
+       (not (member-if #'(lambda (x) (not (typep x type))) obj))))
+
+(declaim (ftype (function (t &optional t) boolean) typed-listvec-p))
+(defun typed-listvec-p (obj &optional (type t))
+  "Predicate that returns whether ~OBJ~ is a valid /proper-list/ or /vector/
+   where all elements have the given ~TYPE~.
+
+   ,* Arguments
+     + ~OBJ~ :: Object to check the type of.
+     + ~TYPE~ :: /typespec/ for the exected element types.
+
+   ,* Returns
+     + ~YES-NO~ :: /generalized-boolean/ indicating whether ~OBJ~ is the proper
+       type or not."
+  (and (typep obj '(or cons null vector))
+       ;; Check that lists are not circular.
+       (or (not (listp obj))
+           (list-length obj))
+       (not (position-if #'(lambda (x) (not (typep x type))) obj))))
+    #+END_SRC
+
+   Both macros and both predicates need to be exported in ~package.lisp~ (Section [[package.lisp]]).
+
+   #+NAME: export-check-typed-list-vector
+   #+BEGIN_SRC lisp -n
+#:typed-sequence-type-error
+#:typed-sequence-type-error-datum
+#:typed-sequence-type-error-datum-value
+#:typed-sequence-type-error-expected-sequence-type
+#:typed-sequence-type-error-expected-element-type
+#:check-typed-list
+#:check-typed-listvec
+#:typed-list-p
+#:typed-listvec-p
+   #+END_SRC
+
+    Unit tests for the checking macros can check that
+
+    + ~nil~ passes for both regardless of the value of the ~type~ argument.
+      Similarly, ~#()~ passes for ~checked-type-listvec~ regardless of the value of the ~type~ argument.
+    + They don't match lists with even a single element of the wrong type.
+      Here, both lists/vectors with all elements having the wrong type and only one element having the wrong type are tested.
+    + They match lists/vectors with elements of the right type, which for simplicity will all be the same here.
+
+    The unit tests iterate over a range of different element values and make lists/vectors with them.
+    There is the possibility that there is an error in these tests, so a few hand crafted tests are done to check.
+    The unit tests are put into a single file =tests/check-typed-list-vector-macros.lisp= file shown below,
+
+    #+NAME: test-check-typed-list-vector-macros
+    #+BEGIN_SRC lisp -n :noweb yes :tangle ../tests/check-typed-list-vector-macros.lisp
+;;;; check-typed-list-vector-macros.lisp : Test check-typed-list and co
+
+<<copyright>>
+
+(defpackage numericl-tests.check-typed-list-vector-macros
+  (:use :cl
+        :prove
+        :numericl))
+(in-package :numericl-tests.check-typed-list-vector-macros)
+
+
+;;; The total number of tests must be set so that prove will know if the tests
+;;; fail to reach them all.
+(plan 10)
+
+;;; Check check-typed-list, check-typed-listvec, typed-list-p, and
+;;; typed-listvec-p.
+
+;;; Manual tests
+(subtest "Hand crafted testing for check-typed-list"
+  (let ((obj nil)
+        (s "nil passes for a ratio typed list."))
+    (ok (not (check-typed-list obj 'ratio)) s)
+    (ok (typed-list-p obj 'ratio) s))
+  (let ((obj '(1 2 3 4 5 6))
+        (s "'(1 2 3 4 5 6) passes for an (integer 0) typed list."))
+    (ok (not (check-typed-list obj '(integer 0))) s)
+    (ok (typed-list-p obj '(integer 0)) s))
+  (let ((obj 3)
+        (s "3 is caught for an integer typed list."))
+    (is-error (check-typed-list obj 'integer) 'typed-sequence-type-error s)
+    (ok (not (typed-list-p obj 'integer)) s))
+  (let ((obj #(1 2))
+        (s "#(1 2) is caught for an integer typed list."))
+    (is-error (check-typed-list obj 'integer) 'typed-sequence-type-error s)
+    (ok (not (typed-list-p obj 'integer)) s))
+  (let ((obj '(1 2 -1 3))
+        (s "'(1 2 -1 3) is caught for an (integer 0) typed list."))
+    (is-error (check-typed-list obj '(integer 0)) 'typed-sequence-type-error s)
+    (ok (not (typed-list-p obj '(integer 0))) s))
+  (let ((obj '(1 2 1/2 3))
+        (s "'(1 2 1/2 3) is caught for an integer typed list."))
+    (is-error (check-typed-list obj 'integer) 'typed-sequence-type-error s)
+    (ok (not (typed-list-p obj 'integer)) s))
+  (let* ((obj '#1=(1 2 4 3 . #1#))
+         (s "Circular list '#1=(1 2 4 3 . #1#) is caught for a t typed list."))
+    (is-error (check-typed-list obj 't) 'typed-sequence-type-error s)
+    (ok (not (typed-list-p obj 't)) s)))
+
+(subtest "Hand crafted testing for check-typed-listvec"
+  (let ((obj nil)
+        (s "nil passes for a ratio typed list or vector."))
+    (ok (not (check-typed-listvec obj 'ratio)) s)
+    (ok (typed-listvec-p obj 'ratio) s))
+  (let ((obj #())
+        (s "#() passes for a ratio typed list or vector."))
+    (ok (not (check-typed-listvec obj 'ratio)) s)
+    (ok (typed-listvec-p obj 'ratio) s))
+  (let ((obj '(1 2 3 4 5 6))
+        (s "'(1 2 3 4 5 6) passes for an (integer 0) typed list or vector."))
+    (ok (not (check-typed-listvec obj '(integer 0))) s)
+    (ok (typed-listvec-p obj '(integer 0)) s))
+  (let ((obj #(1 2 3 4 5 6))
+        (s "#(1 2 3 4 5 6) passes for an (integer 0) typed list or vector."))
+    (ok (not (check-typed-listvec obj '(integer 0))) s)
+    (ok (typed-listvec-p obj '(integer 0)) s))
+  (let ((obj "hey")
+        (s "\"hey\" passes for a character typed list or vector."))
+    (ok (not (check-typed-listvec obj 'character)) s)
+    (ok (typed-listvec-p obj 'character) s))
+  (let ((obj 3)
+        (s "3 is caught for an integer typed list or vector."))
+    (is-error (check-typed-listvec obj 'integer) 'typed-sequence-type-error s)
+    (ok (not (typed-listvec-p obj 'integer)) s))
+  (let ((obj '(1 2 -1 3))
+        (s "'(1 2 -1 3) is caught for an (integer 0) typed list or vector."))
+    (is-error (check-typed-listvec obj '(integer 0)) 'typed-sequence-type-error s)
+    (ok (not (typed-listvec-p obj '(integer 0))) s))
+  (let ((obj #(1 2 -1 3))
+        (s "#(1 2 -1 3) is caught for an (integer 0) typed list or vector"))
+    (is-error (check-typed-listvec obj '(integer 0)) 'typed-sequence-type-error s)
+    (ok (not (typed-listvec-p obj '(integer 0))) s))
+  (let ((obj '(1 2 1/2 3))
+        (s "'(1 2 1/2 3) is caught for an integer typed list or vector"))
+    (is-error (check-typed-listvec obj 'integer) 'typed-sequence-type-error s)
+    (ok (not (typed-listvec-p obj 'integer)) s))
+  (let ((obj #(1 2 1/2 3))
+        (s "#(1 2 1/2 3) is caught for an integer typed list or vector"))
+    (is-error (check-typed-listvec obj 'integer) 'typed-sequence-type-error s)
+    (ok (not (typed-listvec-p obj 'integer)) s))
+  (let* ((obj '#1=(1 2 4 3 . #1#))
+         (s "Circular list '#1=(1 2 4 3 . #1#) is caught for a t typed list."))
+    (is-error (check-typed-list obj 't) 'typed-sequence-type-error s)
+    (ok (not (typed-listvec-p obj 't)) s)))
+
+
+;;; More exhaustive automatic tests. This will be done with a bunch of
+;;; candidate elements.
+(let ((candidates (list -492 3/2 1s0 2e3 -3d4 -1.2l-1 #c(1 -2) '(2 . 3) 'foo :bar #'car
+                        #\a "avia" (make-array '(4)
+                                               :element-type 'fixnum
+                                               :initial-element -3))))
+  (subtest "nil always passes."
+    (dolist (element-value candidates)
+      (let* ((obj)
+             (type-to-use (type-of element-value))
+             (s-list (format nil "nil must be accepted as a ~s typed list" type-to-use))
+             (s-vec (format nil "nil must be accepted as a ~s typed list or vector" type-to-use)))
+        (ok (not (check-typed-list obj type-to-use)) s-list)
+        (ok (typed-list-p obj type-to-use) s-list)
+        (ok (not (check-typed-listvec obj type-to-use)) s-vec)
+        (ok (typed-listvec-p obj type-to-use) s-vec))))
+  (subtest "#() always passes for lists and vectors but always fails lists."
+    (dolist (element-value candidates)
+      (let* ((obj #())
+             (type-to-use (type-of element-value))
+             (s-list (format nil"#() must be rejected as a ~s typed list." type-to-use))
+             (s-vec (format nil "#() must be accepted as a ~s typed list or vector" type-to-use)))
+        (ok (not (check-typed-listvec obj type-to-use)) s-vec)
+        (ok (typed-listvec-p obj type-to-use) s-vec)
+        (is-error (check-typed-list obj type-to-use) 'typed-sequence-type-error s-list)
+        (ok (not (typed-list-p obj type-to-use)) s-list))))
+  (subtest "check-typed-list and typed-list-p for any non-list"
+    (dolist (element-value candidates)
+      (unless (listp element-value)
+        (is-error (check-typed-list element-value t) 'typed-sequence-type-error
+                  (format nil "~a must raise an error for a t typed list." element-value))
+        (ok (not (typed-list-p element-value t))
+            (format nil "~a must return nil for a t typed list." element-value)))))
+  (subtest "check-typed-listvec and typed-listvec-p for any non-list or vector"
+    (dolist (element-value candidates)
+      (unless (typep element-value 'sequence)
+        (is-error (check-typed-listvec element-value t) 'typed-sequence-type-error
+                  (format nil "~a must raise an error for a t typed list or vector." element-value))
+        (ok (not (typed-listvec-p element-value t))
+            (format nil "~a must return nil for a t typed list or vector." element-value)))))
+  (subtest "check-typed-list/listvec and typed-list/listvec-p for improper lists"
+    (dolist (element-value candidates)
+      (let ((obj-list (make-list (1+ (random 50))
+                                 :initial-element element-value)))
+        (setf (cdr (last obj-list)) obj-list)
+        (is-error (check-typed-list obj-list t) 'typed-sequence-type-error
+                  (format nil "An improper list of ~a must raise an error for a t typed list."
+                          element-value))
+        (ok (not (typed-list-p obj-list t))
+            (format nil "An improper list of ~a must return nil for a t typed list."
+                    element-value))
+        (is-error (check-typed-listvec obj-list t) 'typed-sequence-type-error
+                  (format nil "An improper list of ~a must raise an error for a t typed list or vector."
+                          element-value))
+        (ok (not (typed-listvec-p obj-list t))
+            (format nil "An improper list of ~a must return nil for a t typed list or vector."
+                    element-value)))))
+  (subtest "lists/vectors where all elements are wrongly typed are rejected"
+    (block test-failed
+      (dolist (element-value candidates
+               (progn (pass "Typed lists of the wrong type caused errors.")
+                      (pass "Typed lists of the wrong type returned nil for typed-list-p.")
+                      (pass
+                       "Typed vectors of the wrong type caused errors for check-typed-listvec.")
+                      (pass "Typed vectors of the wrong type returned nil for typed-listvec-p")))
+        (dolist (value-to-use-type-of candidates)
+          (let* ((type-to-use (type-of value-to-use-type-of))
+                 (obj-list (make-list (1+ (random 50))
+                                      :initial-element element-value))
+                 (obj-vec (apply #'vector obj-list)))
+            (unless (typep element-value type-to-use)
+              (handler-case
+                  (progn (check-typed-list obj-list type-to-use)
+                         (fail (format nil "list of ~a passed checked-typed-list for type ~a."
+                                       element-value type-to-use))
+                         (return-from test-failed))
+                (error ()))
+              (handler-case
+                  (progn (check-typed-listvec obj-list type-to-use)
+                         (fail (format nil "list of ~a passed checked-typed-listvec for type ~a."
+                                       element-value type-to-use))
+                         (return-from test-failed))
+                (error ()))
+              (handler-case
+                  (progn (check-typed-listvec obj-vec type-to-use)
+                         (fail (format nil "vector of ~a passed checked-typed-listvec for type ~a."
+                                       element-value type-to-use))
+                         (return-from test-failed))
+                (error ()))
+              (when (typed-list-p obj-list type-to-use)
+                (fail (format nil "list of ~a passed typed-list-p for type ~a."
+                              element-value type-to-use))
+                (return-from test-failed))
+              (when (typed-listvec-p obj-list type-to-use)
+                (fail (format nil "list of ~a passed typed-listvec-p for type ~a."
+                              element-value type-to-use))
+                (return-from test-failed))
+              (when (typed-listvec-p obj-vec type-to-use)
+                (fail (format nil "vector of ~a passed typed-listvec-p for type ~a."
+                              element-value type-to-use))
+                (return-from test-failed))))))))
+  (subtest "lists/vectors having one wrong element are rejected"
+    (block test-failed
+      (dolist (main-element-value candidates
+               (progn
+                 (pass "Lists with a wrong typed element caused errors.")
+                 (pass "Lists with a wrong typed element returned nil for typed-list-p.")
+                 (pass
+                  "Vectors with a wrong typed element caused errors for check-typed-listvec.")
+                 (pass "Vectors with a wrong typed element returned nil for typed-listvec-p")))
+        (dolist (other-element-value candidates)
+          (let* ((type-to-use (type-of main-element-value))
+                 (obj-list (make-list (1+ (random 50))
+                                      :initial-element main-element-value))
+                 (obj-vec (apply #'vector obj-list)))
+            (unless (typep other-element-value type-to-use)
+              (setf (elt obj-list (random (length obj-list))) other-element-value)
+              (setf (elt obj-vec (random (length obj-vec))) other-element-value)
+              (handler-case
+                  (progn (check-typed-list obj-list type-to-use)
+                         (fail
+                          (format
+                           nil
+                           "List of ~a with one ~a passed checked-typed-list for type ~a."
+                           main-element-value other-element-value type-to-use))
+                         (return-from test-failed))
+                (error ()))
+              (handler-case
+                  (progn (check-typed-listvec obj-list type-to-use)
+                         (fail
+                          (format
+                           nil
+                           "List of ~a with one ~a passed checked-typed-list for type ~a."
+                           main-element-value other-element-value type-to-use))
+                         (return-from test-failed))
+                (error ()))
+              (handler-case
+                  (progn (check-typed-listvec obj-vec type-to-use)
+                         (fail
+                          (format
+                           nil
+                           "Vector of ~a with one ~a passed checked-typed-list for type ~a."
+                           main-element-value other-element-value type-to-use))
+                         (return-from test-failed))
+                (error ()))
+              (when (typed-list-p obj-list type-to-use)
+                (fail (format nil "List of ~a with one ~a passed typed-list-p for type ~a."
+                              main-element-value other-element-value type-to-use))
+                (return-from test-failed))
+              (when (typed-listvec-p obj-list type-to-use)
+                (fail (format nil "List of ~a with one ~a passed typed-listvec-p for type ~a."
+                              main-element-value other-element-value type-to-use))
+                (return-from test-failed))
+              (when (typed-listvec-p obj-vec type-to-use)
+                (fail (format nil "Vector of ~a with one ~a passed typed-listvec-p for type ~a."
+                              main-element-value other-element-value type-to-use))
+                (return-from test-failed))))))))
+  (subtest "typed lists/vectors with the all elements the same are accepted"
+    (block test-failed
+      (dolist (element-value candidates
+               (progn (pass "Lists with the right type were accepted.")
+                      (pass "Vectors with the right type were accepted for lists and vectors")
+                      (pass "Vectors with the right type were rejected for lists")))
+        (let* ((type-to-use (type-of element-value))
+               (obj-list (make-list (1+ (random 50))
+                                    :initial-element element-value))
+               (obj-vec (apply #'vector obj-list)))
+          (handler-case (assert (null (check-typed-list obj-list type-to-use)))
+            (error ()
+              (fail (format nil "List of ~a rejected as ~a typed list."
+                            element-value type-to-use))
+              (return-from test-failed)))
+          (handler-case (assert (null (check-typed-listvec obj-list type-to-use)))
+            (error ()
+              (fail (format nil "List of ~a rejected as ~a typed list or vector."
+                            element-value type-to-use))
+              (return-from test-failed)))
+          (handler-case
+              (progn (check-typed-list obj-vec type-to-use)
+                     (fail (format nil "Vector of ~a accepted as ~a typed list."
+                                   element-value type-to-use))
+                     (return-from test-failed))
+            (error ()))
+          (unless (typed-list-p obj-list type-to-use)
+            (fail (format nil "List of ~a rejected as ~a typed list."
+                          element-value type-to-use))
+            (return-from test-failed))
+          (unless (typed-listvec-p obj-list type-to-use)
+            (fail (format nil "List of ~a rejected as ~a typed list or vector."
+                          element-value type-to-use))
+            (return-from test-failed))
+          (when (typed-list-p obj-vec type-to-use)
+            (fail (format nil "Vector of ~a accepted as ~a typed list."
+                          element-value type-to-use))
+            (return-from test-failed)))))))
+
+;;; Tell prove that all tests have been done.
+(finalize)
+   #+END_SRC
+
+
+** NumeriCL Types And Aliases
+
+*** Array Sizing Types
+
+    First, it is useful to have types for array indices (both on an axis and flat), which must range from 0 to {{{hspec(array-dimension-limit)}}} and {{{hspec(array-total-size-limit)}}} respectively.
+    It is similarly useful to have one for array rank as well.
+
+    #+NAME: array-index-types
+    #+BEGIN_SRC lisp -n
+;;; Array rank and index limit types.
+
+(deftype array-rank-integer ()
+  "Integer type for valid array ranks."
+  `(integer 0 #.(1- array-rank-limit)))
+
+(deftype array-index-integer ()
+  "Integer type for valid array indices."
+  `(integer 0 #.(1- array-dimension-limit)))
+
+(deftype array-flat-index-integer ()
+  "Integer type for valid array flat indices."
+  `(integer 0 #.(1- array-total-size-limit)))
+    #+END_SRC
+
+*** Number Types <<number-types-section>>
+
+    Here, we define all the type/type-aliases in Table [[table:number-types]] that aren't part of the ~common-lisp~ (~cl~) package as is.
+    We start with ~unsigned-integer~ and ~unsigned-fixnum~ (also known as positive fixnums).
+
+    #+NAME: unsigned-integer-and-fixnum
+    #+BEGIN_SRC lisp -n
+;;; Unsigned integer and fixnum.
+(deftype unsigned-integer (&optional upper-limit)
+  "Unsigned integer of the form /(integer 0 upper-limit)/
+
+   ,* Arguments
+     + ~UPPER-LIMIT~ :: /(integer 0)/ specifying the upper limit."
+  `(integer 0 ,upper-limit))
+
+(deftype unsigned-fixnum ()
+  "Unsigned fixnum, also known as a positive fixnum. The upper limit doesn't
+   change in any way, just the lower limit doesn't allow negative values."
+   `(integer 0 ,most-positive-fixnum))
+    #+END_SRC
+
+    Since complex numbers with integer parts convert to integers if the imaginary part is zero, we need to ~or~ the complex version with the real version.
+    Since {{{hspec(ratio)}}} convert to integers when they are integers, we need to do the same with them (as {{{hspec(rational)}}}).
+
+    #+NAME: complex-integer-and-rational-types-base
+    #+BEGIN_SRC lisp -n
+;;; Complex integer and rational basic types. The real and complex versions must be or-ed together.
+(deftype complex-integer (&optional lower-limit upper-limit)
+  "Complex version of /(integer lower-limit upper-limit)/
+
+   ,* Arguments
+     + ~LOWER-LIMIT~ :: /integer/ secifying the lower limit.
+     + ~UPPER-LIMIT~ :: /integer/ specifying the upper limit."
+  `(or (integer ,lower-limit ,upper-limit) (complex (integer ,lower-limit ,upper-limit))))
+
+(deftype complex-rational (&optional lower-limit upper-limit)
+  "Complex version of /(rational lower-limit upper-limit)/.
+
+   ,* Arguments
+     + ~LOWER-LIMIT~ :: /rational/ secifying the lower limit.
+     + ~UPPER-LIMIT~ :: /rational/ specifying the upper limit."
+  `(or (rational ,lower-limit ,upper-limit) (complex (rational ,lower-limit ,upper-limit))))
+
+(deftype complex-unsigned-byte (&optional nbits)
+  "Complex version of /(unsigned-byte nbits)/.
+
+   ,* Arguments
+     + ~NBITS~ :: /(integer 0)/ The number of bits."
+  `(or (unsigned-byte ,nbits) (complex (unsigned-byte ,nbits))))
+
+(deftype complex-signed-byte (&optional nbits)
+  "Complex version of /(signed-byte nbits)/.
+
+   ,* Arguments
+     + ~NBITS~ :: /(integer 0)/ The number of bits."
+  `(or (signed-byte ,nbits) (complex (signed-byte ,nbits))))
+    #+END_SRC
+
+    From there, we can define aliases for the standard C integer types and their complex versions using the types defined above.
+    We also include the complex version of {{{hspec(fixnum)}}} and {{{hspec(bit)}}}.
+
+    #+NAME: c-and-complex-integer-types-base
+    #+BEGIN_SRC lisp -n
+;;; Aliases for standard C integer types.
+
+(deftype uint8 ()
+  "Alias for /(unsigned-byte 8)/."
+  `(unsigned-byte 8))
+
+(deftype uint16 ()
+  "Alias for /(unsigned-byte 16)/."
+  `(unsigned-byte 16))
+
+(deftype uint32 ()
+  "Alias for /(unsigned-byte 32)/."
+  `(unsigned-byte 32))
+
+(deftype uint64 ()
+  "Alias for /(unsigned-byte 64)/."
+  `(unsigned-byte 64))
+
+(deftype int8 ()
+  "Alias for /(signed-byte 8)/."
+  `(signed-byte 8))
+
+(deftype int16 ()
+  "Alias for /(signed-byte 16)/."
+  `(signed-byte 16))
+
+(deftype int32 ()
+  "Alias for /(signed-byte 32)/."
+  `(signed-byte 32))
+
+(deftype int64 ()
+  "Alias for /(signed-byte 64)/."
+  `(signed-byte 64))
+
+
+;;; Complex versions of the standard C integer types.
+
+(deftype complex-uint8 ()
+  "Complex version of /(unsigned-byte 8)/."
+  `(complex-unsigned-byte 8))
+
+(deftype complex-uint16 ()
+  "Complex version of /(unsigned-byte 16)/."
+  `(complex-unsigned-byte 16))
+
+(deftype complex-uint32 ()
+  "Complex version of /(unsigned-byte 32)/."
+  `(complex-unsigned-byte 32))
+
+(deftype complex-uint64 ()
+  "Complex version of /(unsigned-byte 64)/."
+  `(complex-unsigned-byte 64))
+
+(deftype complex-int8 ()
+  "Complex version of /(signed-byte 8)/."
+  `(complex-signed-byte 8))
+
+(deftype complex-int16 ()
+  "Complex version of /(signed-byte 16)/."
+  `(complex-signed-byte 16))
+
+(deftype complex-int32 ()
+  "Complex version of /(signed-byte 32)/."
+  `(complex-signed-byte 32))
+
+(deftype complex-int64 ()
+  "Complex version of /(signed-byte 64)/."
+  `(complex-signed-byte 64))
+
+
+;;; Complex version of unsigned-integer, fixnum, unsigned-fixnum, bit,
+;;; and real.
+
+(deftype complex-unsigned-integer (&optional upper-limit)
+  "Complex version of ~unsigned-integer~."
+  `(or (unsigned-integer ,upper-limit) (complex (unsigned-integer ,upper-limit))))
+
+(deftype complex-fixnum ()
+  "Complex version of ~fixnum~."
+  `(or fixnum (complex fixnum)))
+
+(deftype complex-unsigned-fixnum ()
+  "Complex version of ~unsigned-fixnum~."
+  `(or unsigned-fixnum (complex unsigned-fixnum)))
+
+(deftype complex-bit ()
+  "Complex version of ~bit~."
+  `(or bit (complex bit)))
+
+(deftype complex-number (&optional lower-limit upper-limit)
+  "Complex version of /(real lower-limit upper-limit)/, which isn't quite just
+   /number/ since /number/ does not have a range and also because it doesn't
+   include /float/ /real/ unlike /number/.
+
+   ,* Arguments
+     + ~LOWER-LIMIT~ :: /real/ secifying the lower limit.
+     + ~UPPER-LIMIT~ :: /real/ specifying the upper limit."
+  `(or (rational ,lower-limit ,upper-limit) (complex (real ,lower-limit ,upper-limit))))
+    #+END_SRC
+
+    {{{hspec(float)}}} types don't convert to {{{hspec(integer)}}} even when they don't have a fractional part, so it isn't necessary to use ~or~ for their complex versions.
+
+    #+NAME: complex-float-types-base
+    #+BEGIN_SRC lisp -n
+;;; Complex float types.
+
+(deftype complex-float (&optional lower-limit upper-limit)
+  "Complex version of /(float lower-limit upper-limit)/.
+
+   ,* Arguments
+     + ~LOWER-LIMIT~ :: /float/ secifying the lower limit.
+     + ~UPPER-LIMIT~ :: /float/ specifying the upper limit."
+  `(complex (float ,lower-limit ,upper-limit)))
+
+(deftype complex-short-float (&optional lower-limit upper-limit)
+  "Complex version of /(short-float lower-limit upper-limit)/.
+
+   ,* Arguments
+     + ~LOWER-LIMIT~ :: /short-float/ secifying the lower limit.
+     + ~UPPER-LIMIT~ :: /short-float/ specifying the upper limit."
+  `(complex (short-float ,lower-limit ,upper-limit)))
+
+(deftype complex-single-float (&optional lower-limit upper-limit)
+  "Complex version of /(single-float lower-limit upper-limit)/.
+
+   ,* Arguments
+     + ~LOWER-LIMIT~ :: /single-float/ secifying the lower limit.
+     + ~UPPER-LIMIT~ :: /single-float/ specifying the upper limit."
+  `(complex (single-float ,lower-limit ,upper-limit)))
+
+(deftype complex-double-float (&optional lower-limit upper-limit)
+  "Complex version of /(double-float lower-limit upper-limit)/.
+
+   ,* Arguments
+     + ~LOWER-LIMIT~ :: /double-float/ secifying the lower limit.
+     + ~UPPER-LIMIT~ :: /double-float/ specifying the upper limit."
+  `(complex (double-float ,lower-limit ,upper-limit)))
+
+(deftype complex-long-float (&optional lower-limit upper-limit)
+  "Complex version of /(long-float lower-limit upper-limit)/.
+
+   ,* Arguments
+     + ~LOWER-LIMIT~ :: /long-float/ secifying the lower limit.
+     + ~UPPER-LIMIT~ :: /long-float/ specifying the upper limit."
+  `(complex (long-float ,lower-limit ,upper-limit)))
+    #+END_SRC
+
+*** Number Type Information
+
+    It is very important to answer the following questions about a type specifier:
+
+    + is a number?
+    + is real or complex?
+    + is exact or inexact?
+    + type of the real component?
+    + lower and upper bounds?
+
+    Unfortunately, ANSI CL's {{{hspec(subtypep)}}} is not guaranteed to work for all of the number types defined in this package due the the use of {{{hspec(or)}}} in the complex exact types.
+    Nor does ANSI CL have an equivalent to {{{hspec(macroexpand)}}} for type specifiers.
+    {{{hspec(subtypep)}}} can handle the {{{hspec(or)}}} on some implementations, but even on those implementations it will not say that the complex exact types are complex (since they are not true subtypes of {{{hspec(complex)}}}).
+    Some implementations provide an equivalent to {{{hspec(macroexpand)}}} for type specifiers, but they are not standard (usually have a name like ~typexpand~, ~type-expand~, or ~expand-type~ in some internal package).
+
+    Doing a full 100% accurate analysis for these questions on all implemntations that have existed and will ever exist is not possible.
+    But, we can do it for all the types in Section [[number-types-section]] in a portable way.
+    We will just assume all other types (even if they are simply aliases or are logical combinations of the types) are not {{{hspec(number)}}}.
+    This is a bit harsh, but it is safe and means we don't need to use implementation specific features or do type collapsing with logical type combinations.
+
+    In order to do this, we first need to manually define the properties for the different types and keep the information in a lookup table.
+    Additionally, we will later need to have the values of zero and unity in the particular type for making views that are all zero or unity.
+    The structure we will use for each type is shown below.
+
+    #+NAME: number-type-properties
+    #+BEGIN_SRC lisp -n
+;;; Object to hold information on numerical types for later lookup.
+
+(defstruct number-type-info
+  "Information for the number type in the ~TYPE~ slot."
+  (type t :read-only t :type t)
+  (exact nil :read-only t :type boolean)
+  (integer nil :read-only t :type boolean)
+  (complex nil :read-only t :type boolean)
+  (real-part-type t :read-only t :type t)
+  (lower-bound nil :read-only t :type (or number null))
+  (upper-bound nil :read-only t :type (or number null))
+  (zero 0 :read-only t :type number)
+  (unity 1 :read-only t :type number))
+    #+END_SRC
+
+    We need a predicate that can check if one number-type-info is a subtype of another.
+    The following conditions mean /number-type-info/ ~A~ is a subtype of /number-type-info/ B.
+
+    1. ~A~ and ~B~ are the same, whether because they are exactly the same or because they are both real or both complex and their real part types are both subtypes of each other, but ~A~ being ~number~ while ~B~ is ~comlex-number~ is excluded.
+    2. ~A~ and ~B~ are either both real or both complex and ~A~'s real part type is a subtype of ~B~'s real part type.
+    3. ~A~ is exact and real while ~B~ is complex and ~A~ is a subtype of ~B~'s real part type (the case of both being real is handled by the previous case).
+    4. ~B~ is ~number~.
+
+    Checking whether a real part type is a subtype of another or not can be done with {{{hspec(subtypep)}}}.
+    The predicate can be more useful if, when ~A~ is a subtype of ~B~, it returns why.
+    This can be done with a different keyword for each of the three cases above.
+
+    #+NAME: sub-number-type-p
+    #+BEGIN_SRC lisp -n
+(declaim (ftype (function (t t) (member nil :same :subtype :exact-real-subtype :all-are-subtype))
+                sub-number-type-info-p))
+(defun sub-number-type-info-p (type1 type2)
+  "Predicate to determine if the first /number-type-info/ is a subtype of the
+   second.
+
+   ,* Arguments
+     + ~TYPE1~ :: The first type, which must be a /number-type-info/.
+     + ~TYPE2~ :: The second type, which must be a /number-type-info/.
+
+   ,* Returns
+     + ~RESULT~ :: Whether ~TYPE1~ is a subtype of ~TYPE2~ or not. If it is not,
+       ~nil~ is returned. If it is, then a /keyword/ specifying what kind of
+       subtype is returned. ~:same~ is returned if ~TYPE1~ and ~TYPE2~ are the
+       same type. ~:exact-real-subtype~ is returned if ~TYPE1~ is real and exact,
+       ~TYPE2~ is complex, and ~TYPE1~ is a subtype of ~TYPE2~'s real part type.
+       ~:all-are-subtype~ is returned for the case when ~TYPE2~ refer to the
+       /number/ type but isn't the same as ~TYPE1~. ~:subtype~ is returned
+       otherwise.
+
+   ,* Correctable Errors
+     + /type-error/ :: If either argument is not a /number-type-info/.
+  "
+  (check-type type1 number-type-info)
+  (check-type type2 number-type-info)
+  (cond ((eql (number-type-info-type type1)
+              (number-type-info-type type2)) :same)
+        ;; Everything is subtype of number.
+        ((eql (number-type-info-type type2) 'number) :all-are-subtype)
+        ;; number is not a subtype of complex-number
+        ((and (eql (number-type-info-type type1) 'number)
+              (eql (number-type-info-type type2) 'complex-number))
+         nil)
+        ;; The real part type of the first must be a subtype of the second. This
+        ;; is a necessary but not sufficient condition.
+        ((not (subtypep (number-type-info-real-part-type type1)
+                        (number-type-info-real-part-type type2))) nil)
+        ;; If both are real or both complex, then they are either the same (if
+        ;; the relation of the previous test holds in the opposite direction)
+        ;; or it is a subtype.
+        ((eql (number-type-info-complex type1) (number-type-info-complex type2))
+         (if (subtypep (number-type-info-real-part-type type2)
+                       (number-type-info-real-part-type type1))
+             :same
+             :subtype))
+        ;; As exact complex numbers get converted to real when their imaginary
+        ;; part is zero, exact reals are subtypes of complexes if they are a
+        ;; subtype of the complex's real part type.
+        ((and (number-type-info-exact type1) (not (number-type-info-complex type1)))
+         :exact-real-subtype)
+        (t nil)))
+
+    #+END_SRC
+
+    Then we need to make a hash table of all the types and type aliases in Section [[number-types-section]].
+    It would also be nice to lookup types by their name as a string or a keyword, so entries are also added with those as their keys.
+    Similarly, for integer types with both bounds set, their equivalent ~(integer lower-bound upper-bound)~ and possibly {{{hspec(signed-byte)}}} or {{{hspec(unsigned-byte)}}} versions, if they exist, should also be keys.
+
+    #+NAME: number-types-table
+    #+BEGIN_SRC lisp -n
+;;; Make a table of the information for all numerical types defined/used in this
+;;; library.
+
+(declaim (type hash-table +builtin-number-types-table+))
+(defparameter +builtin-number-types-table+
+  (let ((table (make-hash-table :test #'equal))
+        ;; Start with entries that don't have a complex version or whose complex
+        ;; version must be done manually.
+        (entries (list (make-number-type-info :type 'array-rank-integer
+                                              :real-part-type 'array-rank-integer
+                                              :exact t :integer t :lower-bound 0
+                                              :upper-bound #.(1- array-rank-limit))
+                       (make-number-type-info :type 'array-index-integer
+                                              :real-part-type 'array-index-integer
+                                              :exact t :integer t :lower-bound 0
+                                              :upper-bound #.(1- array-dimension-limit))
+                       (make-number-type-info :type 'array-flat-index-integer
+                                              :real-part-type 'array-flat-index-integer
+                                              :exact t :integer t :lower-bound 0
+                                              :upper-bound #.(1- array-total-size-limit))
+                       (make-number-type-info :type 'real
+                                              :real-part-type 'real)
+                       (make-number-type-info :type 'complex-number
+                                              :real-part-type 'real
+                                              :complex t)
+                       (make-number-type-info :type 'number
+                                              :real-part-type 'real
+                                              :complex t
+                                              :lower-bound most-negative-long-float
+                                              :upper-bound most-positive-long-float)))
+        ;; Make a list of the real types that are not C fixed width integer
+        ;; types, which will be generated later.
+        (real-entries (list (make-number-type-info :type 'integer
+                                                   :real-part-type 'integer
+                                                   :exact t :integer t)
+                            (make-number-type-info :type 'unsigned-integer
+                                                   :real-part-type 'unsigned-integer
+                                                   :exact t :integer t :lower-bound 0)
+                            (make-number-type-info :type 'fixnum
+                                                   :real-part-type 'fixnum
+                                                   :exact t :integer t
+                                                   :lower-bound most-negative-fixnum
+                                                   :upper-bound most-positive-fixnum)
+                            (make-number-type-info :type 'unsigned-fixnum
+                                                   :real-part-type 'unsigned-fixnum
+                                                   :exact t :integer t
+                                                   :lower-bound 0
+                                                   :upper-bound most-positive-fixnum)
+                            (make-number-type-info :type 'bit
+                                                   :real-part-type 'bit
+                                                   :exact t :integer t
+                                                   :lower-bound 0
+                                                   :upper-bound 1)
+                            (make-number-type-info :type 'unsigned-byte
+                                                   :real-part-type 'unsigned-byte
+                                                   :exact t :integer t
+                                                   :lower-bound 0)
+                            (make-number-type-info :type 'signed-byte
+                                                   :real-part-type 'signed-byte
+                                                   :exact t :integer t)
+                            (make-number-type-info :type 'rational
+                                                   :real-part-type 'rational
+                                                   :exact t :integer nil)
+                            (make-number-type-info :type 'float
+                                                   :real-part-type 'float
+                                                   :zero 0.0e0 :unity 1.0e0)
+                            (make-number-type-info :type 'short-float
+                                                   :real-part-type 'short-float
+                                                   :zero 0.0s0 :unity 1.0s0)
+                            (make-number-type-info :type 'single-float
+                                                   :real-part-type 'single-float
+                                                   :zero 0.0f0 :unity 1.0f0)
+                            (make-number-type-info :type 'double-float
+                                                   :real-part-type 'double-float
+                                                   :zero 0.0d0 :unity 1.0d0)
+                            (make-number-type-info :type 'long-float
+                                                   :real-part-type 'long-float
+                                                   :zero 0.0l0 :unity 1.0l0))))
+    ;; Make the C fixed width integer types and push them onto real-entries.
+    (dolist (bits '(8 16 32 64))
+      (let ((unsigned-symbol (find-symbol (format nil "UINT~a" bits)))
+            (signed-symbol (find-symbol (format nil "INT~a" bits))))
+        (push (make-number-type-info :type unsigned-symbol
+                                     :real-part-type unsigned-symbol
+                                     :exact t :integer t
+                                     :lower-bound 0 :upper-bound (1- (expt 2 bits)))
+              real-entries)
+        (push (make-number-type-info :type signed-symbol
+                                     :real-part-type signed-symbol
+                                     :exact t :integer t
+                                     :lower-bound (- (expt 2 (1- bits)))
+                                     :upper-bound (1- (expt 2 (1- bits))))
+              real-entries)))
+    ;; Push the real entries onto entries along with generated complex
+    ;; counterparts.
+    (dolist (rel real-entries)
+      (push rel entries)
+      (push (make-number-type-info :type
+                                   (find-symbol
+                                    (concatenate 'string "COMPLEX-"
+                                                 (symbol-name (number-type-info-type rel))))
+                                   :real-part-type (number-type-info-real-part-type rel)
+                                   :exact (number-type-info-exact rel)
+                                   :integer (number-type-info-integer rel)
+                                   :complex t
+                                   :lower-bound (number-type-info-lower-bound rel)
+                                   :upper-bound (number-type-info-upper-bound rel)
+                                   :zero (complex (number-type-info-zero rel)
+                                                  (number-type-info-zero rel))
+                                   :unity (complex (number-type-info-unity rel)
+                                                   (number-type-info-zero rel)))
+            entries))
+    ;; Put everything into the hash table three times with the following keys:
+    ;;
+    ;; 1. the symbol for the type
+    ;; 2. the string version of their symbol name without package prefix
+    ;; 3. the keyword version of their symbol name
+    ;; 4. the (integer lower-bound upper-bound) if it can be described in that form
+    ;; 5. the (unsigned-integer upper-bound) if it can be described in that form
+    ;; 6. the (signed-byte bits) if it can be described in that form
+    ;; 7. the (unsigned-byte bits) if it can be described in that form
+    (dolist (el entries table)
+      (let* ((sym-key (number-type-info-type el))
+             (str-key (string-downcase (symbol-name sym-key)))
+             (kwd-key (intern (string-upcase str-key) "KEYWORD")))
+        (setf (gethash sym-key table) el)
+        (setf (gethash str-key table) el)
+        (setf (gethash kwd-key table) el)
+        (with-slots (complex lower-bound upper-bound) el
+          (when (and (number-type-info-integer el) lower-bound upper-bound)
+            (setf (gethash (list (if complex 'complex-integer 'integer)
+                                 lower-bound upper-bound) table) el)
+            ;; If it could be represented with signed-byte, then all bits in
+            ;; upper-bound will be 1 (incrementing by 1 gets a power of two) and
+            ;; lower-bound == -1 - upper-bound. The integer length plus one is
+            ;; the number of bits.
+            (when (and (= (integer-length upper-bound) (logcount upper-bound))
+                       (= (- lower-bound) (1+ upper-bound)))
+              (setf (gethash (list (if complex 'complex-signed-byte 'signed-byte)
+                                   (1+ (integer-length upper-bound))) table) el))
+            ;; Unsigned
+            (when (zerop lower-bound)
+              (setf (gethash (list (if complex 'complex-unsigned-integer 'unsigned-integer)
+                                   upper-bound) table) el)
+              ;; If it could be represented with unsigned-byte, then all bits
+              ;; in upper-bound will be 1 (incrementing it by 1 gets a power of
+              ;; two). The integer length is then the number of bits.
+              (when (= (integer-length upper-bound) (logcount upper-bound))
+                (setf (gethash (list (if complex 'complex-unsigned-byte 'unsigned-byte)
+                                     (integer-length upper-bound)) table) el))))))))
+  "/hash-table/ of numerical type information for the numerical types used in
+   this library. The keys are the type /symbols/, /keyword/ names of the types,
+   /string/ names of the types, and /list/ /typespec/ for /integer/ types with
+   both bounds specified; and the values are /number-type-info/ describing the
+   type.")
+    #+END_SRC
+
+    We need a function to lookup the information for a typespec, but also check the validity of the typespec.
+    Typespecs could be given as symbols, strings, keywords, or lists with a symbol as the first element and up to two additional elements.
+    The number of additional elements (the arguments) is equal to the number of bounds in the number-type-info structure that are ~nil~.
+    So the function must count and compare the number of arguments for lists.
+
+    #+NAME: number-type-info-lookup
+    #+BEGIN_SRC lisp -n
+;;; number-type-info lookup, searching, etc. functions.
+
+(declaim (ftype (function (t)
+                          (values (or number-type-info null) t)) get-number-type-info))
+(defun get-number-type-info (type)
+  "Lookup the /number-type-info/ and /typespec/ for the given ~TYPE~.
+
+   ,* Arguments
+     + ~TYPE~ :: /typespec/, /keyword/, or /string/ specifying the type to
+       lookup.
+
+   ,* Returns
+     + ~INFO~ :: /number-type-info/ corresponding to ~TYPE~ or ~nil~ if none
+       were found.
+     + ~TYPESPEC~ :: The /typespec/ corresponding to ~TYPE~, or ~nil~ if it is
+       ~TYPE~ is not itself a /typespec/ and ~INFO~ would be ~nil~.
+
+   ,* Uncorrectable Errors
+     + ~TYPE-ERROR~ :: If ~TYPE~ isn't a /symbol/, /keyword/, /string/, or a
+       /list/ with the first element being a /symbol/.
+     + ~ERRROR~ :: If ~TYPE~ is a /list/ that has too many arguments for its
+       respective /number-type-info/."
+  (let ((info (gethash type +builtin-number-types-table+)))
+    (etypecase type
+      ((or symbol keyword string)
+       (cond ((and (symbolp type) (not (keywordp type)))
+              (values info type))
+             (info (values info (number-type-info-type info)))
+             (t (values nil nil))))
+      ;; If the whole type is in there, use it. Otherwise, we must look for
+      ;; the entry with the first symbol and check the argument number.
+      ((cons symbol list)
+       (if info
+           (values info type)
+           (let ((info (gethash (first type) +builtin-number-types-table+)))
+             ;; Check that there aren't too many arguments. There
+             ;; is no problem if there is less
+             (when info
+               (let ((max-length
+                      (+ 1
+                         (if (number-type-info-lower-bound info) 0 1)
+                         (if (number-type-info-upper-bound info) 0 1))))
+                 (when (> (list-length type) max-length)
+                   (error "type ~a has more arguments than allowed (~s)."
+                          type (1- max-length)))))
+             (values info type)))))))
+    #+END_SRC
+
+    The type heirarchy will be slightly different on different implementations and machines since {{{hspec(fixnum)}}} and the {{{hspec(float)}}} types can differ in size and format.
+    It is useful to be able to make a graph of the type hierarchy in a particular environment, so we define a function that generates a type hierarchy graph in Graphviz dot format and returns it.
+
+    #+NAME: make-number-type-graphviz-diagram
+    #+BEGIN_SRC lisp -n
+(defun make-number-type-graphviz-diagram ()
+  "Make a Graphviz dot graph for the number type heirarchy.
+
+   ,* Returns
+     + ~S~ :: /string/ containing the Graphviz dot content. This can be passed
+       to Graphviz to generate a graph image."
+  ;; We need functions to extract the symbol name as a string and to see if two
+  ;; ttypes are the same.
+  (flet ((info-name (info) (string-downcase (symbol-name (number-type-info-type info))))
+         (same-p (type1 type2) (eql :same (sub-number-type-info-p type1 type2))))
+    ;; We will be making a string output stream and using format to write all
+    ;; the output to it.
+    ;;
+    ;; We also need to get all the types in a list (only getting one copy of
+    ;; each by requiring that the key be a keyword), one with duplicates
+    ;; removed, and their names. We also need an alist, same, where same entries
+    ;; will be put later.
+    (let* ((fstr (make-array '(0) :element-type 'base-char :fill-pointer 0 :adjustable t))
+           (all-types
+            (loop
+               :for key :being :each :hash-keys :of +builtin-number-types-table+
+               :using (:hash-value info)
+               :unless (or (search "array" (info-name info) :test #'char=)
+                           (not (keywordp key)))
+               :collect info))
+           ;; Remove types that are the same as other ones.
+           (types (remove-duplicates all-types :test #'same-p))
+           ;; For the names, all same types will be combined into one, separated
+           ;; by newlines.
+           (names (mapcar #'(lambda (type1)
+                              (let ((pieces))
+                                (loop
+                                   :for type2 :in all-types
+                                   :when (same-p type1 type2)
+                                   :do (progn (when pieces
+                                                (push "\\n" pieces))
+                                              (push (info-name type2) pieces)))
+                                (apply #'concatenate (list* 'string pieces))))
+                          types))
+           (same))
+      (with-output-to-string (s fstr)
+        (format s "digraph {~%")
+        ;; The nodes are split into subgraphs, which are
+        ;;
+        ;; * reals
+        ;;   * array index types
+        ;;   * real unsigned integers
+        ;;   * real signed integers
+        ;;   * real floats
+        ;; * complex
+        ;;   * complex unsigned integers
+        ;;   * complex signed integers
+        ;;   * complex floats
+        ;;
+        ;; And everything else.
+        ;;
+        ;; Categorize the types.
+        (let ((array-indices)
+              (real-unsigned-ints)
+              (real-signed-ints)
+              (real-floats)
+              (complex-unsigned-ints)
+              (complex-signed-ints)
+              (complex-floats)
+              (other-reals)
+              (other-complexes)
+              (others))
+          (loop
+             :for type :in types
+             :and name :in names
+             :for complex = (number-type-info-complex type)
+             :and integer = (number-type-info-integer type)
+             :and unsigned = (equalp 0 (number-type-info-lower-bound type))
+             :and float = (search "float" name :test #'char=)
+             :do
+               (cond ((equal name "number") (push name others))
+                     ((search "array-" name :test #'char=) (push name array-indices))
+                     (complex (cond (integer (if unsigned
+                                                 (push name complex-unsigned-ints)
+                                                 (push name complex-signed-ints)))
+                                    (float (push name complex-floats))
+                                    (t (push name other-complexes))))
+                     (integer (if unsigned
+                                  (push name real-unsigned-ints)
+                                  (push name real-signed-ints)))
+                     (float (push name real-floats))
+                     (t (push name other-reals))))
+          ;; everything else
+          (dolist (name others)
+            (format s "  \"~a\";~%" name))
+
+          ;; Reals
+          (format s "  subgraph cluster_reals {~%")
+          ;; Reals not in any category.
+          (dolist (name other-reals)
+            (format s "    \"~a\";~%" name))
+          ;; Array index/rank types.
+          (format s "    subgraph cluster_real_array_indices {~%")
+          (dolist (name array-indices)
+            (format s "      \"~a\";~%" name))
+          (format s "    }~%")
+          ;; Unsigned integer reals
+          (format s "    subgraph cluster_real_unsigned_ints { color=red;~%")
+          (dolist (name real-unsigned-ints)
+            (format s "      \"~a\";~%" name))
+          (format s "    }~%")
+          ;; Signed integer reals
+          (format s "    subgraph cluster_real_signed_ints { color=blue;~%")
+          (dolist (name real-signed-ints)
+            (format s "      \"~a\";~%" name))
+          (format s "    }~%")
+          ;; Float reals
+          (format s "    subgraph cluster_real_float { color=darkgreen;~%")
+          (dolist (name real-floats)
+            (format s "      \"~a\";~%" name))
+          (format s "    }~%")
+          (format s "  }~%")
+
+          ;; Complexes
+          (format s "  subgraph cluster_complexes {~%")
+          ;; Complexes not in any category.
+          (dolist (name other-complexes)
+            (format s "    \"~a\";~%" name))
+          ;; Float complexes
+          (format s "    subgraph cluster_complex_float { color=darkgreen;~%")
+          (dolist (name complex-floats)
+            (format s "      \"~a\";~%" name))
+          (format s "    }~%")
+          ;; Unsigned integer complexes
+          (format s "    subgraph cluster_complex_unsigned_ints { color=red;~%")
+          (dolist (name complex-unsigned-ints)
+            (format s "      \"~a\";~%" name))
+          (format s "    }~%")
+          ;; Signed integer complexes
+          (format s "    subgraph cluster_complex_signed_ints { color=blue;~%")
+          (dolist (name complex-signed-ints)
+            (format s "      \"~a\";~%" name))
+          (format s "    }~%")
+          (format s "  }~%"))
+
+        ;; Do all the edges.
+        (loop
+           :for type1 :in types
+           :and name1 :in names
+           :for subtype-kinds = (mapcar #'(lambda (type2)
+                                            (sub-number-type-info-p type1 type2))
+                                        types)
+           ;; Find all which are the same. If they haven't already been put into
+           ;; same, they can be added to the graph and pushed onto same.
+           :do
+             (loop
+                :for name2 :in names
+                :and kind :in subtype-kinds
+                :when (and (eql kind :same)
+                           (not (equal name1 name2))
+                           (not (member (list name1 name2) same
+                                        :test (lambda (a b)
+                                                (or (equal a b)
+                                                    (equal a (reverse b)))))))
+                :do
+                  (progn (push (list name1 name2) same)
+                         (format s "  \"~a\" -> \"~a\";~%  \"~a\" -> \"~a\";~%"
+                                 name1 name2 name2 name1)))
+           ;; Go through the supertypes and form edges from only those
+           ;; supertypes that are not supertypes of any of the others
+           ;; to the current type being considered. This is what needs
+           ;; to be done to prevent edges being drawn from integer to
+           ;; every integer subtype.
+           :do
+             (let ((supers (loop
+                              :for type2 :in types
+                              :and name2 :in names
+                              :and kind :in subtype-kinds
+                              :when (and kind (not (eql kind :same)))
+                              :collect (cons name2 type2))))
+               (loop
+                  :for entry2 :in supers
+                  :for name2 = (car entry2)
+                  :and type2 = (cdr entry2)
+                  :when (notany #'(lambda (entry3)
+                                    (case (sub-number-type-info-p (cdr entry3) type2)
+                                      ((:same nil) nil)
+                                      (otherwise t)))
+                                supers)
+                  :do
+                    (format s "  \"~a\" -> \"~a\";~%" name2 name1))))
+        ;; Add information about the implementation, OS, and machine type.
+        (let ((imp-type (lisp-implementation-type))
+              (imp-vers (lisp-implementation-version))
+              (soft-type (software-type))
+              (m-type (machine-type)))
+          (format s "  labeloc=\"t\"~%  label=\"~a~a\"~%"
+                  (concatenate 'string
+                               imp-type
+                               " "
+                               ;; Grab everything from the first digit up to the
+                               ;; first space. This must be done to elliminate
+                               ;; the "Version " in prefix CCL and everything
+                               ;; the implementation version number on CLISP and
+                               ;; CCL.
+                               (let ((first-digit (position-if #'digit-char-p imp-vers)))
+                                 (subseq imp-vers first-digit
+                                         (position #\Space imp-vers
+                                                   :test #'char= :start first-digit))))
+                  ;; Very long software types must be excluded, such as found
+                  ;; on CLISP.
+                  (if (> 20 (array-total-size soft-type))
+                      (concatenate 'string ", " soft-type " " m-type)
+                      (concatenate 'string " " m-type))))
+        (format s "}"))
+      fstr)))
+    #+END_SRC
+
+*** Number Type Determination
+
+    For many operations, rather than being given the specific number type to use, we will be given one or more numbers that we must find a suitable type for.
+    The first operation is to find all the number types of which the different numbers are all members.
+    This will include both very specific types (if available) as well as the most general types such as {{{hspec(number)}}}.
+
+    #+NAME: number-type-search
+    #+BEGIN_SRC lisp -n
+(declaim (ftype (function (t &key (:complex t)) list) find-possible-number-types))
+(defun find-possible-number-types (nums &key complex)
+  "Find all possible number types that all elements of ~NUMS~ are members of.
+
+   ,* Arguments
+     + ~NUMS~ :: /proper-list/ or /vector/ of /number/
+     + ~COMPLEX~ :: ~t~, ~nil~, or ~:if-complex-element~ indicating whether
+       only complex types should be considered and all elements of ~NUMS~
+       should be coerced to /complex/ before checking type membership, or not.
+       ~t~ means yes. ~nil~ (the default) means no. ~:if-complex-element~ means
+       yes if there is any element of ~NUMS~ that is complex and no otherwise.
+
+   ,* Returns
+     + ~TYPES~ :: /list/ of the /number-type-info/ that every element of ~NUMS~
+       (or their complex coercion if applicable) is a member of.
+
+   ,* Correctable Errors
+     + /typed-sequence-type-error/ :: If ~NUMS~ is not a /list/ or /vector/ of
+       /number/.
+     + /type-error/ :: If ~COMPLEX~ has an invalid value."
+  (check-typed-listvec nums 'number)
+  (check-type complex (member t nil :if-complex-element))
+  (let ((only-complex (or (eql complex t)
+                          (and (eql complex :if-complex-element)
+                               (some #'(lambda (x) (typep x 'complex)) nums)))))
+    (loop
+       :for key :being :each :hash-keys :of +builtin-number-types-table+ :using (:hash-value info)
+       :when (and (symbolp key)
+                  (not (keywordp key))
+                  (or (not only-complex) (number-type-info-complex info))
+                  (let ((type (number-type-info-type info)))
+                    (every (if only-complex
+                               #'(lambda (x) (typep (coerce x 'complex) type))
+                               #'(lambda (x) (typep x type)))
+                           nums)))
+       :collect info)))
+    #+END_SRC
+
+    Often, we need to find the narrowist type that includes all of the elements, instead of all possible ones like ~find-possible-number-types~ does.
+    Essentially, we are looking for the elements who are not supertypes of any other passed type other than itself.
+    This selected types are all same or disjoint from every other selected type.
+    For example, /bit/ and /float/ are disjoint.
+    Another example, on some implementations, /short-float/ and /single-float/ are the same.
+
+    #+NAME: narrow-number-types
+    #+BEGIN_SRC lisp -n
+(declaim (ftype (function (t) list) narrow-types))
+(defun narrow-types (types)
+  "Returns the subset of ~TYPES~ that are not a subtype of any other element of
+   ~TYPE~ except themselves (and aliases of themselves). These are the
+   narrowist types.
+
+   ,* Arguments
+     + ~TYPES~ :: /proper-list/ of /number-type-info/ the types to find the
+       narrowest type/s in.
+
+   ,* Returns
+     + ~NARROW-TYPES~ :: /list/ of /number-type-info/ which are subtypes of no
+       element of ~TYPES~ other than themselves and aliases of themselves.
+
+   ,* Correctable Errors
+     + /typed-sequence-type-error/ :: If ~TYPES~ is not a /proper-list/ of
+       /number-type-info/."
+  (check-typed-list types 'number-type-info)
+  (loop
+     :for type-to-consider :in types
+     :when (every #'(lambda (other-type)
+                      (typep (sub-number-type-info-p other-type type-to-consider)
+                             '(member :same nil)))
+                  types)
+     :collect type-to-consider))
+    #+END_SRC
+
+    Then, we need to combine ~narrow-types~ and ~find-possible-number-types~ to find the narrowist number type that includes all of the given numbers.
+
+    #+NAME: find-narrowist-number-type
+    #+BEGIN_SRC lisp -n
+(declaim (ftype (function (t) (values number-type-info list)) find-narrowist-number-type))
+(defun find-narrowist-number-type (nums)
+  "Finds the narrowist number type that can fit all numbers in ~NUMS~.
+
+   If any elements of ~NUMS~ are complex, the returned type/s will be complex
+   and thus some elements of ~NUMS~ would need to be coerced to be converted to
+   the returned type/s.
+
+   Narrowist types are defined to be the number types that every element of
+   ~NUMS~ would be contained in the type (possibly requiring to be coerced to
+   complex first) but are not subtypes of each other except themselves.
+
+   ,* Arguments
+     + ~NUMS~ :: /proper-list/ or /vector/ of /number/ to find the a single
+       number type that can fit all of them.
+
+   ,* Returns
+     + ~TYPE~ :: /number-type-info/ for one of the narrowist number type that
+       could be found.
+     + ~OTHERS~ :: /list/ of other /number-type-info/ that are just as narrow
+       but can still hold all elements of ~NUMS~.
+
+   ,* Correctable Errors
+     + /typed-sequence-type-error/ :: If ~NUMS~ is not a /list/ or /vector/ of
+       /number/."
+  (let ((types (narrow-types (find-possible-number-types nums :complex :if-complex-element))))
+    (if types
+        (values (car types) (cdr types))
+        (values nil nil))))
+
+    #+END_SRC
+
+*** Package Exports
+
+    The package exports for all of these aliases, which will be in ~package.lisp~ (Section [[package.lisp]]), are
+
+    #+NAME: export-numerical-aliases
+    #+BEGIN_SRC lisp -n
+#:array-rank-integer
+#:array-index-integer
+#:array-flat-index-integer
+#:unsigned-integer
+#:unsigned-fixnum
+#:uint8
+#:uint16
+#:uint32
+#:uint64
+#:int8
+#:int16
+#:int32
+#:int64
+#:complex-rational
+#:complex-integer
+#:complex-unsigned-byte
+#:complex-signed-byte
+#:complex-bit
+#:complex-uint8
+#:complex-uint16
+#:complex-uint32
+#:complex-uint64
+#:complex-int8
+#:complex-int16
+#:complex-int32
+#:complex-int64
+#:complex-unsigned-integer
+#:complex-fixnum
+#:complex-unsigned-fixnum
+#:complex-number
+#:complex-float
+#:complex-short-float
+#:complex-single-float
+#:complex-double-float
+#:complex-long-float
+#:number-type-info
+#:number-type-info-type
+#:number-type-info-exact
+#:number-type-info-integer
+#:number-type-info-complex
+#:number-type-info-real-part-type
+#:number-type-info-lower-bound
+#:number-type-info-upper-bound
+#:number-type-info-zero
+#:number-type-info-unity
+#:number-type-info-p
+#:copy-number-type-info
+#:sub-number-type-info-p
+#:get-number-type-info
+#:make-number-type-graphviz-diagram
+#:find-possible-number-types
+#:narrow-types
+#:find-narrowist-number-type
+    #+END_SRC
+
+
+** Views <<type:view>>
+
+*** View Definition
+
+    We want to have an array wrapper that supports access like ANSI CL {{{hspec(array)}}}s (index access, row major access, displaced arrays, etc.) and also
+
+    + Stricter type enforcement when setting array values, even when the {{{hspec(upgraded-array-element-type)}}} isn't the desired type.
+    + Non-contiguous access to the underlying array in that the strides for each dimension can be negative, skip elements, etc.
+    + Have different dimensions than the underlying array.
+
+    To do this, we need a structure, /view/, that holds the underlying array storage (or /view/ if it isn't possible to do simple stride indexing into the underlying array) as well as information on the desired element type, rank, dimensions, the offset/displacement of the first element in the underlying array, and the strides for each dimension.
+    It is also convenient to have slots for
+
+    + The /number-type-info/ for the element type, if there is one
+    + Total number of elements
+    + The kind of contiguity, if any
+    + The minimum and maximum flat indices into the underlying storage that can be accessed (this is really useful for whenever copying needs to be done)
+
+    All slots are set to read-only to better ensure they do not get into an invalid state once a /view/ is created.
+    Unfortunately, it is still possible to change the elements inside the ~dimensions~ and ~strides~ slots.
+    Slots for the same kind of thing as in {{{hspec(array)}}} use names such that their reader looks just like the reading function for {{{hspec(array)}}}s but with the ~array-~ prefix replaced with ~view-~.
+    The constructor's name is set to ~%make-view~ rather than the default ~make-view~ since we don't want to expose the base level constructor.
+    Instead, a dedicated ~make-view~ constructor is defined later to properly construct a ~view~ with everyting being checked.
+
+    #+NAME: view-definition
+    #+BEGIN_SRC lisp -n
+;;; Array views, which are for when the upgraded-array-element-type of the
+;;; desired array type is not the type, non-contiguous indexing, etc.
+
+(defstruct (view (:constructor %make-view))
+  "View on an array or another view for displaced access, non-contiguous
+   indexing, retaining type information when the
+   ~upgraded-array-element-type~ is a superclass, etc.
+
+   Indexing into the /view/ V wrapping around an array with
+   ~(baref V &rest indices)~ indexes into the underlying storage like
+
+   ,#+BEGIN_SRC lisp
+   (row-major-aref (view-storage V)
+                   (+ (view-offset V)
+                      (reduce #'+ (map 'list
+                                       #'(lambda (i d s) (* s (mod i d)))
+                                       indices
+                                       (view-dimensions V)
+                                       (view-strides V)))))
+   ,#+END_SRC"
+  (storage (make-array nil :element-type 'number)
+           :read-only t
+           :type (or array view))
+  (element-type 'number :read-only t :type t)
+  (element-type-info nil :read-only t :type (or number-type-info null))
+  (contiguous nil :read-only t :type (member :c :f t nil))
+  (total-size 0 :read-only t :type array-flat-index-integer)
+  (rank 0 :read-only t :type array-rank-integer)
+  (dimensions (make-array nil :element-type 'array-index-integer)
+              :read-only t
+              :type (simple-array array-index-integer 1))
+  (offset 0 :read-only t :type array-flat-index-integer)
+  (strides (make-array nil :element-type 'fixnum)
+           :read-only t
+           :type (simple-array fixnum 1))
+  (flat-index-minimum 0 :read-only t :type array-flat-index-integer)
+  (flat-index-maximum 0 :read-only t :type array-flat-index-integer))
+    #+END_SRC
+
+*** Generic Array And View Property Readers
+
+    In order to more easily use views and arrays, we need to generalize equivalents for the following for both arrays and views.
+
+    + {{{hspec(array-dimension)}}} :: Get length along a particular dimension.
+    + {{{hspec(array-dimensions)}}} :: Get all the dimensions of the array.
+    + {{{hspec(array-displacement)}}} :: Get the displaced array and offset.
+    + {{{hspec(array-element-type)}}} :: Get the element type of the array.
+    + {{{hspec(array-in-bounds-p)}}} :: Check if array indices are in bounds.
+    + {{{hspec(array-rank)}}} :: Get the rank of the array.
+    + {{{hspec(array-total-size)}}} :: Get the total number of elements.
+    + ~view-contiguous~ :: Whether the view is contiguous or not (~nil~) and if it is contiguous whether it is CL/C contiguous (~:c~) or Fortran contiguous (~:f~) or some other ordering (~t~).
+    + ~view-element-type-info~ :: The /number-type-info/ for the element type, or ~nil~ if there isn't any.
+    + ~view-flat-index-maximum~ :: The maxinum flat index into the underlying storage that can be accessed by some combination of indices.
+    + ~view-flat-index-minimum~ :: The mininum flat index into the underlying storage that can be accessed by some combination of indices.
+    + ~view-offset~ :: The displacement into ~view-storage~.
+    + ~view-storage~ :: The underlying array or view this one is using for storage.
+    + ~view-strides~ :: Get the strides of the view.
+
+    The general equivalents will all start with the prefix "varray".
+
+    An important choice has to be made with these general equivalents.
+    Should they be functions, generics, or macros?
+    Functions or macros would all use {{{hspec(ctypecase)}}} to select the action appropriate for each type, where as generics would rely on the built-in method finding.
+    While using CLOS generics would allow this library to be extended to new array-like types, they impose a major performance penalty so using generics will be excluded.
+    Macros have the advantage that should the type be known at compile time, it might be easier for an optimizing implementation to only use the right branch than with functions.
+    Additionally, macros provide more opportunity for manipulating internally in this library in other functions and macros.
+    But functions allow the definitions to be redefined without user code having to be recompiled.
+    So, we will define the general equivalents as functions.
+
+    #+NAME: varray-generic-equivalents
+    #+BEGIN_SRC lisp -n
+;;; General function equivalents to array-dimension, array-dimensions, etc. for
+;;; arrays and views.
+
+(declaim (ftype (function (t t) array-index-integer)
+                varray-dimension))
+(defun varray-dimension (arr axis-number)
+  "Function that returns the ~AXIS-NUMBER~'th dimension (/unsigned-fixnum/) of
+   ~ARR~. Dimensions beyond ~ARR~'s rank are considered to be unity.
+
+   ,* Arguments
+     + ~ARR~ :: /array/ or /view/.
+     + ~AXIS-NUMBER~ :: /unsigned-fixnum/ dimension index/number.
+
+   ,* Returns
+     + ~AXIS-LENGTH~ :: /unsigned-fixnum/ specifying the length along the axis.
+
+   ,* Uncorrectable Errors
+     + /type-error/ :: If ~ARR~ is not an /array/ or /view/."
+  (etypecase arr
+    (view (if (>= axis-number (view-rank arr))
+              1
+              (aref (view-dimensions arr) axis-number)))
+    (array (if (>= axis-number (array-rank arr))
+               1
+               (array-dimension arr axis-number)))))
+
+
+(declaim (ftype (function (t &key (:copy t)) (simple-array array-index-integer 1))
+                varray-dimensions))
+(defun varray-dimensions (arr &key copy)
+  "Function that returns the dimensions of ~ARR~, which will be a
+   /(vector unsigned-fixnum)/. The dimensions vector will be copied if ~COPY~
+   is true, and otherwise it will be the underlying slot value when ~ARR~ is a
+   /view/.
+
+   ,* Arguments
+     + ~ARR~ :: /array/ or /view/.
+     + ~COPY~ :: /generalized-boolean/ indicating whether the dimensions vector
+       should be copied or not when ~ARR~ is a /view/. Default is ~nil~.
+
+   ,* Returns
+     + ~DIMENSIONS~ :: /(vector unsigned-fixnum)/ specifying the lengths along
+       each axis/dimension, in order.
+
+   ,* Uncorrectable Errors
+     + /type-error/ :: If ~ARR~ is not an /array/ or /view/."
+   (etypecase arr
+     (view (if copy
+               (copy-seq (view-dimensions arr))
+               (view-dimensions arr)))
+     (array (coerce (array-dimensions arr) '(vector array-index-integer)))))
+
+
+(declaim (ftype (function (t)
+                          (values (or view array null) array-flat-index-integer))
+                varray-displacement))
+(defun varray-displacement (arr)
+  "Function that returns the /array/ or /view/ that ~ARR~ is displaced to and
+   the offset as two successive values. ~nil~ is returned for the first value
+   when ~ARR~ is a non-displaced /array/.
+
+   ,* Arguments
+     + ~ARR~ :: /array/ or /view/.
+
+   ,* Returns
+     + ~DISPLACED-TO~ :: /array/ or /view/ that ~ARR~ is displaced to, or ~nil~
+       if ~ARR~ is a non-displaced /array/.
+     + ~OFFSET~ :: /unsigned-fixnum/ giving the offset into ~DISPLACED-TO~ that
+       ~ARR~ starts at.
+
+   ,* Uncorrectable Errors
+     + /type-error/ :: If ~ARR~ is not an /array/ or /view/."
+  (etypecase arr
+    (view (values (view-storage arr) (view-offset arr)))
+    (array (array-displacement arr))))
+
+
+(declaim (ftype (function (t) t) varray-element-type))
+(defun varray-element-type (arr)
+  "Function that returns the /typespec/ for the elements of ~ARR~.
+
+   ,* Arguments
+     + ~ARR~ :: /array/ or /view/.
+
+   ,* Returns
+     + ~TYPE~ :: /typespec/ indicating the element specialization type.
+
+   ,* Uncorrectable Errors
+     + /type-error/ :: If ~ARR~ is not an /array/ or /view/."
+  (etypecase arr
+    (view (view-element-type arr))
+    (array (array-element-type arr))))
+
+
+(declaim (ftype (function (t t) boolean)
+                varray-in-bounds-p))
+(defun varray-in-bounds-p (arr subscripts)
+  "Function returns true if the ~SUBSCRIPTS~ are all in bounds of ~ARR~. If
+   ~SUBSCRIPTS~ is not a /proper-list/ or /vector/ of valid indices or is out of
+   bounds, ~nil is returned~. Otherwise ~t~ is returned. Indices beyond ~ARR~'s
+   rank are considered valid as long as they are zero. Indices that are not
+   included are assumed to be zero.
+
+   ,* Arguments
+     + ~ARR~ :: /array/ or /view/.
+     + ~SUBSCRIPTS~ :: The subscripts. Should be a /proper-list/ or /vector/ of
+       /unsigned-fixnum/.
+
+   ,* Returns
+     + ~IN-BOUNDS~ :: /boolean/ indicating whether ~SUBSCRIPTS~ is in bounds in
+       ~ARR~ or not.
+
+   ,* Uncorrectable Errors
+     + /type-error/ :: If ~ARR~ is not an /array/ or /view/."
+  (and (typed-listvec-p subscripts 'unsigned-fixnum)
+       (let* ((dimensions (varray-dimensions arr))
+              (rank (array-total-size dimensions)))
+         (etypecase subscripts
+           (vector (loop
+                      :for index :of-type fixnum :upfrom 0
+                      :and sub :of-type unsigned-fixnum :across subscripts
+                      :always (if (< index rank)
+                                  (< sub (aref dimensions index))
+                                  (zerop sub))))
+           (list (loop
+                    :for index :of-type fixnum :upfrom 0
+                    :and sub :of-type unsigned-fixnum :in subscripts
+                    :always (if (< index rank)
+                                (< sub (aref dimensions index))
+                                (zerop sub))))))))
+
+
+(declaim (ftype (function (t) array-rank-integer) varray-rank))
+(defun varray-rank (arr)
+  "Function that returns the rank ~ARR~.
+
+   ,* Arguments
+     + ~ARR~ :: /array/ or /view/.
+
+   ,* Returns
+     + ~RANK~ :: /unsigned-fixnum/ indicating the rank.
+
+   ,* Uncorrectable Errors
+     + /type-error/ :: If ~ARR~ is not an /array/ or /view/."
+  (etypecase arr
+    (view (view-rank arr))
+    (array (array-rank arr))))
+
+
+(declaim (ftype (function (t) array-flat-index-integer) varray-total-size))
+(defun varray-total-size (arr)
+  "Function that returns the total size (number of elements) of ~ARR~.
+
+   ,* Arguments
+     + ~ARR~ :: /array/ or /view/.
+
+   ,* Returns
+     + ~TOTAL-SIZE~ :: /unsigned-fixnum/ indicating the total number of
+       elements.
+
+   ,* Uncorrectable Errors
+     + /type-error/ :: If ~ARR~ is not an /array/ or /view/."
+  (etypecase arr
+    (view (view-total-size arr))
+    (array (array-total-size arr))))
+
+
+(declaim (ftype (function (t) (member :c :f nil t)) varray-contiguous))
+(defun varray-contiguous (arr)
+  "Function that returns the kind of contiguouty of ~ARR~.
+
+   | Contiguity | Description                                      |
+   |------------+--------------------------------------------------|
+   | ~:c~       | CL/C contiguous                                  |
+   | ~:f~       | Fortran contiguous                               |
+   | ~t~        | Some other contiguous                            |
+   | ~nil~      | Not contiguous or contiguity can't be determined |
+
+   ,* Arguments
+     + ~ARR~ :: /array/ or /view/.
+
+   ,* Returns
+     + ~CONTIGUITY~ :: ~:c~, ~:f~, ~t~, or ~nil~ indicating the contiguity as
+       specified in the table above.
+
+   ,* Uncorrectable Errors
+     + /type-error/ :: If ~ARR~ is not an /array/ or /view/."
+  (etypecase arr
+    (view (view-contiguous arr))
+    (array :c)))
+
+
+(declaim (ftype (function (t) (or number-type-info null)) varray-element-type-info))
+(defun varray-elementy-type-info (arr)
+  "Function that returns the /number-type-info/ for ~ARR~'s element type.
+
+   ,* Arguments
+     + ~ARR~ :: /array/ or /view/.
+
+   ,* Returns
+     + ~INFO~ :: The /number-type-info/ for ~ARR~'s element type, or ~nil~ if
+       there isn't any.
+
+   ,* Uncorrectable Errors
+     + /type-error/ :: If ~ARR~ is not an /array/ or /view/."
+  (etypecase arr
+    (view (view-element-type-info arr))
+    (array (multiple-value-bind (info typespec)
+               (get-number-type-info (array-element-type arr))
+             (declare (ignore typespec))
+             info))))
+
+
+(declaim (ftype (function (t) array-flat-index-integer) varray-flat-index-maximum))
+(defun varray-flat-index-maximum (arr)
+  "Function that returns the maximum accessible flat index in the underlying
+   storage of ~ARR~.
+
+   ,* Arguments
+     + ~ARR~ :: /array/ or /view/.
+
+   ,* Returns
+     + ~INDEX~ :: /array-flat-index-integer/ indicating the maximum flat index
+       into the underlying storage of ~ARR~ that is accessible.
+
+   ,* Uncorrectable Errors
+     + /type-error/ :: If ~ARR~ is not an /array/ or /view/."
+  (etypecase arr
+    (view (view-flat-index-maximum arr))
+    (array (1- (array-total-size arr)))))
+
+
+(declaim (ftype (function (t) array-flat-index-integer) varray-flat-index-minimum))
+(defun varray-flat-index-minimum (arr)
+  "Function that returns the minimum accessible flat index in the underlying
+   storage of ~ARR~.
+
+   ,* Arguments
+     + ~ARR~ :: /array/ or /view/.
+
+   ,* Returns
+     + ~INDEX~ :: /array-flat-index-integer/ indicating the minimum flat index
+       into the underlying storage of ~ARR~ that is accessible.
+
+   ,* Uncorrectable Errors
+     + /type-error/ :: If ~ARR~ is not an /array/ or /view/."
+  (etypecase arr
+    (view (view-flat-index-minimum arr))
+    (array 0)))
+
+
+(declaim (ftype (function (t) array-flat-index-integer) varray-offset))
+(defun varray-offset (arr)
+  "Function that returns the offset of ~ARR~.
+
+   ,* Arguments
+     + ~ARR~ :: /array/ or /view/.
+
+   ,* Returns
+     + ~OFFSET~ :: /unsigned-fixnum/ indicating the offset into the underlying
+       storage of ~ARR~.
+
+   ,* Uncorrectable Errors
+     + /type-error/ :: If ~ARR~ is not an /array/ or /view/."
+  (etypecase arr
+    (view (view-offset arr))
+    (array (multiple-value-bind (storage offset)
+               (array-displacement arr)
+             (declare (ignore storage))
+             offset))))
+
+
+(declaim (ftype (function (t) (or view array)) varray-storage))
+(defun varray-storage (arr)
+  "Function that returns the /view/ or /array/ that ~ARR~ is displaced with
+   respect to.
+
+   ,* Arguments
+     + ~ARR~ :: /array/ or /view/.
+
+   ,* Returns
+     + ~DISPLACED-TO~ :: /array/ or /view/ that ~ARR~ is displaced with respect
+       to; which will be itself when ~ARR~ is an /array/.
+
+   ,* Uncorrectable Errors
+     + /type-error/ :: If ~ARR~ is not an /array/ or /view/."
+  (etypecase arr
+    (view (view-storage arr))
+    (array (multiple-value-bind (storage offset)
+               (array-displacement arr)
+             (declare (ignore offset))
+             (or storage arr)))))
+
+(declaim (ftype (function (t &key (:copy t)) (simple-array fixnum 1))
+                varray-strides))
+(defun varray-strides (arr &key copy)
+  "Function that returns the strides of ~ARR~. The strides vector will be copied
+   if ~COPY~ is true, and otherwise it will be the underlying slot value when
+   ~ARR~ is a /view/.
+
+   ,* Arguments
+     + ~ARR~ :: /array/ or /view/.
+     + ~COPY~ :: /generalized-boolean/ indicating whether the strides vector
+       should be copied or not when ~ARR~ is a /view/. Default is ~nil~.
+
+   ,* Returns
+     + ~STRIDES~ :: /(vector fixnum)/ indicating the stride for each
+       axis/dimension.
+
+   ,* Uncorrectable Errors
+     + /type-error/ :: If ~ARR~ is not an /array/ or /view/."
+  (etypecase arr
+    (view (if copy
+              (copy-seq (view-strides arr))
+              (view-strides arr)))
+    (array (coerce (make-contiguous-strides (array-dimensions arr) :order :c)
+                   '(vector fixnum)))))
+    #+END_SRC
+
+*** Contiguity Functions
+
+    ~varray-strides-m~ uses ~make-contiguous-strides~ to generate the appropriate strides for an {{{hspec(array)}}}.
+    We need this kind of function not just for ~varray-strides~ but also as default strides when making views as well as determining what kind of contiguity explicitly passed strides are.
+    The function is defined below.
+
+    #+NAME: contiguous-stride-generating
+    #+BEGIN_SRC lisp -n
+(declaim (ftype (function (t &key (:order t))
+                          (simple-array unsigned-integer 1))
+                make-contiguous-strides))
+(defun make-contiguous-strides (dimensions &key (order :c))
+  "Return CL/C or Fortran contiguous strides for the given ~DIMENSIONS~.
+   ~ORDER~ specifies the ordering and must be ~:c~ (the default) or ~:f~.
+
+   ,* Arguments
+     + ~DIMENSIONS~ :: /proper-list/ or /vector/ of /unsigned-fixnum/ indicating
+       the length along each axis/dimension.
+     + ~ORDER~ :: ~:c~ for CL/C contiguity or ~:f~ for Fortran contiguity.
+
+   ,* Returns
+     + ~STRIDES~ :: /(vector unsigned-integer)/ having the generated strides.
+
+   ,* Correctable Errors
+     + /typed-sequence-type-error/ :: If ~DIMENSIONS~ is not a /proper-list/ or
+       /vector/ of /unsigned-fixnum/.
+     + /type-error/ :: ~ORDER~ has the wrong value."
+  (check-typed-listvec dimensions 'array-index-integer)
+  ;; We need to take the cumulative product (either forwards or backwards)
+  ;; but starting from 1 and not using the last element of dimensions. The array
+  ;; can be pre-allocated and then mapped into. The mapping function takes the
+  ;; current value of the product and *= it with the new element while spitting
+  ;; out the old value.
+  (let ((strides (make-array (list (length dimensions))
+                             :element-type 'unsigned-integer
+                             :initial-element 0)))
+    (ccase order
+      ((:c)
+       (ctypecase dimensions
+         (vector (loop
+                    :for i :of-type integer
+                    :downfrom (1- (array-total-size strides)) :to 0
+                    :and prod :of-type unsigned-integer = 1 :then (* prod dim)
+                    :for dim :of-type array-index-integer = (aref dimensions i)
+                    :do (setf (aref strides i) prod)))
+         (list (loop
+                  :for i :of-type integer
+                  :downfrom (1- (array-total-size strides)) :to 0
+                  :and prod :of-type unsigned-integer = 1 :then (* prod dim)
+                  :and dim :of-type array-index-integer :in (reverse dimensions)
+                  :do (setf (aref strides i) prod)))))
+      ((:f)
+       (ctypecase dimensions
+         (vector (loop
+                    :for i :of-type integer :upfrom 0
+                    :and prod :of-type unsigned-integer = 1 :then (* prod dim)
+                    :and dim :of-type array-index-integer :across dimensions
+                    :do (setf (aref strides i) prod)))
+         (list (loop
+                  :for i :of-type integer :upfrom 0
+                  :and prod :of-type unsigned-integer = 1 :then (* prod dim)
+                  :and dim :of-type array-index-integer :in dimensions
+                  :do (setf (aref strides i) prod))))))
+    strides))
+    #+END_SRC
+
+    We also need a function to determine whether a dimensions-strides combination is contiguous or not.
+    And if they can be determined to be contiguous, determine what kind of contiguity if possible.
+    It would be difficult to determine all possible kinds of contiguity.
+    So the function will only check a few contiguity types and consider anything else non-contiguous as default.
+    This means that many contiguous configurations will be overlooked (false-negatives), unfortunately.
+
+    #+NAME: determine-contiguity
+    #+BEGIN_SRC lisp -n
+(declaim (ftype (function (t t) (member :c :f t nil))
+                determine-contiguity))
+(defun determine-contiguity (dimensions strides)
+  "Determine the contiguity of ~DIMENSIONS~ and ~STRIDES~.
+
+   | Contiguity | Description                                      |
+   |------------+--------------------------------------------------|
+   | ~:c~       | CL/C contiguous                                  |
+   | ~:f~       | Fortran contiguous                               |
+   | ~t~        | Some other contiguous                            |
+   | ~nil~      | Not contiguous or contiguity can't be determined |
+
+   ,* Arguments
+     + ~DIMENSIONS~ :: /proper-list/ or /vector/ of /unsigned-fixnum/ indicating
+       the length along each axis/dimension.
+     + ~STRIDES~ :: /proper-list/ or /vector/ of /fixnum/ specifiying the stride
+       in elements for each axis/dimension. Must have the same length as
+       ~DIMENSIONS~.
+
+   ,* Returns
+     + ~CONTIGUITY~ :: ~:c~, ~:f~, ~t~, or ~nil~ indicating the contiguity as
+       specified in the table above.
+
+   ,* Correctable Errors
+     + /error/ :: If ~DIMENSIONS~ or ~STRIDES~ are not the right type or have
+       different lengths."
+  ;; While doing the assert, we need to protect against circular lists causing
+  ;; execution to hang.
+  (let ((*print-circle* t))
+    (assert (and (typed-listvec-p dimensions 'array-index-integer)
+                 (typed-listvec-p strides 'fixnum)
+                 (= (length dimensions) (length strides)))
+            (dimensions strides)
+            (concatenate 'string
+                         "dimensions and strides must be typed lists or vectors of the ~%"
+                         "same length of unsigned-fixnum and fixnum respectively. But~%"
+                         "dimensions was ~a~%"
+                         "and strides was ~a")
+            dimensions strides))
+  (if (>= 1 (reduce #'* dimensions :initial-value 1))
+      :c
+      (let ((c-strides (make-contiguous-strides dimensions :order :c)))
+        (cond ((every #'= strides c-strides) :c)
+              ((every #'(lambda (s cs) (= (- s) cs)) strides c-strides) t)
+              (t (let ((f-strides (make-contiguous-strides dimensions :order :f)))
+                   (cond ((every #'= strides f-strides) :f)
+                         ((every #'(lambda (s fs) (= (- s) fs)) strides f-strides) t)
+                         (t nil))))))))
+    #+END_SRC
+
+*** Low Level View Constructor
+
+    With the low-level constructor, the generic property readers, and the contiguity functions; we can finally make a /view/.
+    Fundamentally, we only need an {{{hspec(array)}}} or /view/ as the underlying storage, called ~ARR-VIEW~ in the function.
+    All required slot values can be pulled from or generated from ~ARR-VIEW~ and the other slot values.
+    So, the function only takes overrides to the defaults; which are just the ~element-type~, ~dimensions~, ~strides~, and ~offset~.
+    The rest can be gotten from those.
+
+    The constructor also checks the validity of all the arguments individually and together.
+    While this could be done with a single {{{hspec(assert)}}}, doing so would be complicated to write and would not be able to tell the caller what is wrong and thefore would make it hard to debug errors.
+    So, instead, the constructor has an infinite loop inside of which is a {{{hspec(restart-case)}}} environment
+    Inside the environment, everything is checked one by one.
+    If anything is invalid, an error is generated that indicates what is invalid.
+    Then, restarts are provided for changing any of the arguments/parameters and the loop repeats.
+    If all of the checks are passed, at the end of the loop the /view/ is made and returned.
+
+    But first, we need to define conditions for errors with dimensions, strides, and offsets.
+    One is needed for when the rank is too great.
+    The other three conditions are for when the smallest or largest indices are outside of the proper limits.
+    One condition will be the base condition, and then there are two children conditions, one for exceeding the lower bound and one for exceeding the upper bound.
+    These three all use the index, the dimensions, the strides, and the offset.
+    The condition for exceeding the upper bound additionally needs the value of the upper bound and what the upper bound is.
+
+    #+NAME: rank-dim-stride-offset-error-conditions
+    #+BEGIN_SRC lisp -n
+;;; Conditions for errors arrising from the maximum rank or maximum array bounds being exceeded.
+
+(define-condition rank-limit-error (error)
+  ((dimensions :initarg :dimensions :initform nil :reader rank-limit-error-dimensions))
+  (:report
+   (lambda (condition stream)
+     (let ((dims (rank-limit-error-dimensions condition)))
+       (format stream
+               "Dimensions ~a gives a rank of ~a that exceeds the implementation limit of ~a."
+               dims
+               (length dims)
+               array-rank-limit))))
+  (:documentation
+   "Error for the situation that a view/array rank exceeds the implementation
+    limit.
+
+    ,* Slots
+      + ~DIMENSIONS~ :: The offending dimensions. Initialized by the
+        ~:dimensions~ argument and read by ~rank-limit-error-dimensions~."))
+
+(define-condition dim-stride-offset-bounds-error (error)
+  ((index :initarg :index :initform 0
+          :reader dim-stride-offset-bounds-error-index)
+   (dimensions :initarg :dimensions :initform nil
+               :reader dim-stride-offset-bounds-error-dimensions)
+   (strides :initarg :strides :initform nil
+            :reader dim-stride-offset-bounds-error-strides)
+   (offset :initarg :offset :initform 0
+           :reader dim-stride-offset-bounds-error-offset))
+  (:documentation
+   "Base condition for when the dimensions, strides, and offset combine to make
+    indices outside of the bounds of an /array/ or /view/. Condition is not
+    meant to be signaled directly. Instead subconditions should be signalled.
+
+    ,* Slots
+      + ~INDEX~ :: The offending index. Initialized by the ~:index~ argument and
+        read by ~dim-stride-offset-bounds-error-index~.
+      + ~DIMENSIONS~ :: The offending dimensions. Initialized by the
+        ~:dimensions~ argument and read by
+        ~dim-stride-offset-bounds-error-dimensions~.
+      + ~STRIDES~ :: The offending strides. Initialized by the ~:strides~
+        argument and read by ~dim-stride-offset-bounds-error-strides~.
+      + ~OFFSET~ :: The offending offset. Initialized by the ~:offset~ argument
+        and read by ~dim-stride-offset-bounds-error-offset~."))
+
+(define-condition dim-stride-offset-lower-bound-error
+    (dim-stride-offset-bounds-error)
+  ()
+  (:report
+   (lambda (condition stream)
+     (format
+      stream
+      "The smallest row-major index ~a < 0.~%dimensions: ~a~%strides: ~a~%offset: ~a."
+      (dim-stride-offset-bounds-error-index condition)
+      (dim-stride-offset-bounds-error-dimensions condition)
+      (dim-stride-offset-bounds-error-strides condition)
+      (dim-stride-offset-bounds-error-offset condition))))
+  (:documentation
+   "Condition for when the dimensions, strides, and offset combine to make the
+    smallest index less than zero, and thus out of the range of the /array/ or
+    /view/."))
+
+(define-condition dim-stride-offset-upper-bound-error
+    (dim-stride-offset-bounds-error)
+  ((limit :initarg :limit :initform 0
+          :reader dim-stride-offset-upper-bound-error-limit)
+   (limit-name :initarg :limit-name :initform ""
+               :reader dim-stride-offset-upper-bound-error-limit-name))
+  (:report
+   (lambda (condition stream)
+     (format
+      stream
+      "The largest row-major index ~a >= ~a (~a).~%dimensions: ~a~%strides: ~a~%offset: ~a."
+      (dim-stride-offset-bounds-error-index condition)
+      (dim-stride-offset-upper-bound-error-limit-name condition)
+      (dim-stride-offset-upper-bound-error-limit condition)
+      (dim-stride-offset-bounds-error-dimensions condition)
+      (dim-stride-offset-bounds-error-strides condition)
+      (dim-stride-offset-bounds-error-offset condition))))
+  (:documentation
+   "Condition for when the dimensions, strides, and offset combine to make the
+    largest index too large for an /array/ or /view/.
+
+    ,* Slots
+      + ~LIMIT~ :: The upper index limit that was exceeded. Initialized by the
+        ~:limit~ argument and read by
+        ~dim-stride-offset-upper-bound-error-limit~.
+      + ~LIMIT-NAME~ :: The kind/name of the upper index limit, such as the
+        /array/ or /view/ size or implementation limit. Should be a /string/.
+        Initialized by the ~:limit-name~ arguement and read by
+        ~dim-stride-offset-upper-bound-error-limit-name~."))
+    #+END_SRC
+
+    And we also need a function to validate a combination of /view/ dimensions, strides, and offset.
+    We need this as a separate function since it will be needed in more than one of the /view/ constructors.
+    This function can also, in addition to validating, can generate the strides if they weren't given (passed as ~nil~ and then generated assuming CL/C contiguity), rank, total size, the minimum array index, and the maximum array index.
+
+    #+NAME: process-dimensions-strides-offsets
+    #+BEGIN_SRC lisp -n
+(declaim (ftype (function (t t t &key (:max-length t))
+                          (values (or vector list) array-rank-integer
+                                  array-flat-index-integer
+                                  array-flat-index-integer array-flat-index-integer))
+                process-dimensions-strides-offset))
+(defun process-dimensions-strides-offset (dimensions strides offset &key max-length)
+  " Validates and processes a given combination of dimensions, strides, and
+    offset; and generates default strides if strides were not given, the rank,
+    total number of elements, smallest flat index, and largest flat index and
+    returns them. Different errors are signaled for different reasons that the
+    arguments are invalid.
+
+   ,* Arguments
+     + ~DIMENSIONS~ :: /proper-list/ or /vector/ of /array-index-integer/
+       specifying the desired length along each axis/dimension.
+     + ~STRIDES~ :: /proper-list/ or /vector/ of /fixnum/ specifiying the stride
+       in elements for each axis/dimension. Must have the same length as
+       ~DIMENSIONS~ or be ~nil~. When ~STRIDES~ is ~nil~, default CL/C
+       contiguous strides are generated for the given ~DIMENSIONS~.
+     + ~OFFSET~ :: /array-flat-index-integer/ specifying the offset of the first
+       element.
+     + ~MAX-LENGTH~ :: The maximum length of the underlying /array/ or /view/
+       indices must not exceed. Must be /array-flat-index-integer/, or ~nil~
+       to not be used (default) which means only the implementation limit is
+       checked.
+
+   ,* Returns
+     + ~STDS~ :: /proper-list/ or /vector/ of /fixnum/ specifiying the stride
+       in elements for each axis/dimension. Will be ~STRIDES~ if ~STRIDES~ was
+       not ~nil~. Otherwise, this is generated and returned.
+     + ~RANK~ :: /array-rank-integer/ specifying the array rank.
+     + ~TOTAL-SIZE~ :: /array-flat-index-integer/ specifying the total number
+       of elements.
+     + ~MIN-INDEX~ :: /array-flat-index-integer/ giving the smallest index that
+       can be reached with the given arguments.
+     + ~Max-INDEX~ :: /array-flat-index-integer/ giving the largest index that
+       can be reached with the given arguments.
+
+   ,* Uncorrectable Errors
+     + ~TYPED-SEQUENCE-TYPE-ERROR~ :: If ~DIMENSIONS~ and/or ~STRIDES~ are the
+       wrong type.
+     + ~TYPE-ERROR~ :: If any of the other arguments are the wrong type.
+     + ~ERROR~ :: If ~STRIDES~ is not ~nil~ but doesn't have the same length as
+       ~DIMENSIONS~.
+     + ~RANK-LIMIT-ERROR~ :: If the maximum implementation allowed rank would is
+       exceeded.
+     + ~DIM-STRIDE-OFFSET-LOWER-BOUND-ERROR~ :: If the smallest flat index would
+       be negative.
+     + ~DIM-STRIDE-OFFSET-UPPER-BOUND-ERROR~ :: If the largest flat index would
+       be exceed the implementation limit, or ~MAX-LENGTH~ if it is given."
+  ;; Check the argument types.
+  (unless (typed-listvec-p dimensions 'array-index-integer)
+    (error 'typed-sequence-type-error
+           :datum dimensions :datum-name 'dimensions
+           :expected-sequence-type "proper-list or vector"
+           :expected-element-type 'array-index-integer))
+  (unless (typed-listvec-p dimensions 'fixnum)
+    (error 'typed-sequence-type-error
+           :datum strides :datum-name 'strides
+           :expected-sequence-type "proper-list or vector"
+           :expected-element-type 'fixnum))
+  (unless (typep offset 'array-flat-index-integer)
+    (error 'type-error :datum offset :expected-type 'array-flat-index-integer))
+  (unless (typep max-length '(or array-flat-index-integer null))
+    (error 'type-error :datum max-length :expected-type '(or array-flat-index-integer null)))
+  ;; Strides must be either nil or have the same length as dimensions.
+  (when (and strides
+             (/= (length dimensions) (length strides)))
+    (error "STRIDES must have same length as DIMENSIONS, or be nil. They were ~a and ~a."
+           (length strides) (length dimensions)))
+  (let* ((rank (length dimensions))
+         (total-size (reduce #'* dimensions :initial-value 1))
+         (stds (or strides (make-contiguous-strides dimensions)))
+         ;; To get the extremes in row major indices, we need to add
+         ;; up the mins and maxes of the extreme indices for each
+         ;; dimension times the stride. This will always be the min
+         ;; or max of 0 and the dimension minus 1 times the stride.
+         ;; And then the offset must be added. The extremes must
+         ;; ultimately fit inside arr-view
+         (dims-times-strides (map '(vector integer)
+                                  #'(lambda (d s) (if (plusp d) (* (1- d) s) 0))
+                                  dimensions stds))
+         (min-index (reduce #'+ dims-times-strides
+                            :key #'(lambda (x) (min x 0))
+                            :initial-value offset))
+         (max-index (reduce #'+ dims-times-strides
+                            :key #'(lambda (x) (max x 0))
+                            :initial-value offset)))
+    ;; Check the implementation limits.
+    (unless (typep rank 'array-rank-integer)
+      (error 'rank-limit-error :dimensions dimensions))
+    (unless (typep min-index 'array-flat-index-integer)
+      (error 'dim-stride-offset-lower-bound-error
+             :index min-index
+             :dimensions dimensions :strides stds :offset offset))
+    (unless (typep max-index 'array-flat-index-integer)
+      (error 'dim-stride-offset-upper-bound-error
+             :index max-index
+             :limit array-total-size-limit :limit-name "array-total-size-limit"
+             :dimensions dimensions :strides stds :offset offset))
+    ;; If max-length was given, make sure it is not exceeded.
+    (when (and max-length (>= max-index max-length))
+      (error 'dim-stride-offset-upper-bound-error
+             :index max-index
+             :limit max-length :limit-name "MAX-LENGTH"
+             :dimensions dimensions :strides stds :offset offset))
+    (values stds rank total-size min-index max-index)))
+    #+END_SRC
+
+    Then, we can write the low level constructor ~make-view~.
+    But, the higher level constructors will need to turn off all of ~make-view~'s restarts, so there is an additional keyword argument to disable restarts.
+    This is needed since some other constructors need to shadow some of the restarts and not have others potentially messing up validation.
+
+    #+NAME: make-view
+    #+BEGIN_SRC lisp -n
+;; View constructor to take the place of the default constructor for the view
+;; struct with full argument validation and generating of some of the slots
+;; that depend only on the others (rather than passing them).
+
+(declaim (ftype (function (t &key (:element-type t) (:dimensions t) (:strides t) (:offset t)
+                             (:disable-restarts t))
+                          view)
+                make-view))
+(defun make-view (arr-view &key (element-type t element-type-p)
+                             (dimensions nil dimensions-p) strides (offset 0)
+                             disable-restarts)
+  "Function that makes a /view/ displaced with respect to the /array/ or /view/
+   ~ARR-VIEW~.
+
+   ,* Arguments
+     + ~ARR-VIEW~ :: /array/ or /view/ that this /view/ should be displaced with
+       respect to.
+     + ~ELEMENT-TYPE~ :: /typespec/, /number-type-info/, or the /keyword/ or
+       /string/ version of the /typespec/ name for the elements. The default is
+       to use the element type of ~ARR-VIEW~.
+     + ~DIMENSIONS~ :: /proper-list/ or /vector/ of /array-index-integer/
+       specifying the desired length along each axis/dimension. The default is
+       to use the dimensions of ~ARR-VIEW~.
+     + ~STRIDES~ :: /proper-list/ or /vector/ of /fixnum/ specifiying the stride
+       in elements for each axis/dimension. Must have the same length as
+       ~DIMENSIONS~. The default is CL/C contiguous strides for the given
+       ~DIMENSIONS~.
+     + ~OFFSET~ :: /array-flat-index-integer/ specifying the offset in elements
+       into ~ARR-VIEW~ to be displaced by. The default is zero.
+     + ~DISABLE-RESTARTS~ :: /generalized-boolean/ that indicates whether all
+       restarts other than ~CHANGE-DISABLED-RESTARTS~ should be disabled or not.
+
+   ,* Returns
+     + ~VIEW~ :: The resulting /view/.
+
+   ,* Correctable or Uncorrectable Errors
+     + ~TYPED-SEQUENCE-TYPE-ERROR~ :: If ~DIMENSIONS~ and/or ~STRIDES~ are the
+       wrong type.
+     + ~TYPE-ERROR~ :: If any of the other arguments are the wrong type.
+     + ~ERROR~ :: If ~STRIDES~ is not ~nil~ but doesn't have the same length as
+       ~DIMENSIONS~.
+     + ~RANK-LIMIT-ERROR~ :: If the maximum implementation allowed rank would is
+       exceeded.
+     + ~DIM-STRIDE-OFFSET-LOWER-BOUND-ERROR~ :: If the smallest flat index would
+       be negative.
+     + ~DIM-STRIDE-OFFSET-UPPER-BOUND-ERROR~ :: If the largest flat index would
+       be exceed the implementation limit, or ~MAX-LENGTH~ if it is given.
+
+   ,* Restarts
+     + ~CHANGE-DISABLED-RESTARTS~ :: Give a new value for ~DISABLE-RESTARTS~.
+       This restart is only available at the beginning of execution when
+       ~DISABLED-RESTARTS~ is being checked. Takes the new value as its first
+       argument. It cannot be disabled.
+     + ~CHANGE-ARR-VIEW~ :: Give a new value to ~ARR-VIEW~, which must be the
+       first and only argument.
+     + ~DISCARD-ELEMENT-TYPE~ :: Discard the passed (or set by restart) value
+       of ~ELEMENT-TYPE~ and use the default instead. Must be passed a
+       /generalized-boolean/.
+     + ~CHANGE-ELEMENT-TYPE~ :: Give a new value to use for ~ELEMENT-TYPE~,
+       which must be the first and only argument.
+     + ~DISCARD-DIMENSIONS~ :: Discard the passed (or set by restart) value of
+       ~DIMENSIONS~ and use the default instead. Must be passed a
+       /generalized-boolean/.
+     + ~CHANGE-DIMENSIONS~ :: Give a new value to use for ~DIMENSIONS~, which
+       must be the first and only argument.
+     + ~CHANGE-STRIDES~ :: Give a new value to use for ~STRIDES~ (or ~nil~ to
+       use the default), which must be the first and only argument.
+     + ~CHANGE-OFFSET~ :: Give a new value to use for ~OFFSET~, which must be
+       the first and only argument."
+  ;; Loop till all parameters to make the view are valid (if something is
+  ;; invalid and a restart is invoked to fix something, everything must be
+  ;; checked again). Then, once every test is passed, the view can be made.
+  (loop
+     (restart-case
+         (progn
+           (unless (typep arr-view '(or array view))
+             (error 'type-error :datum arr-view :expected-type '(or array view)))
+           ;; If an element type is not given, it is whatever the type of the
+           ;; underlying storage is. Otherwise, it is what is passed if it is
+           ;; a list or non-keyword symbol. If it is a keywords or string, its
+           ;; number-type-info must be looked up to get the type.
+           (let ((el-type (if (not element-type-p)
+                              (varray-element-type arr-view)
+                              (ctypecase element-type
+                                ((or keyword string)
+                                 (multiple-value-bind (info type)
+                                     (get-number-type-info element-type)
+                                   (if info
+                                       type
+                                       (error "element-type ~s has the wrong type"
+                                              element-type))))
+                                ((or symbol list) element-type))))
+                 (dims (if dimensions-p
+                           dimensions
+                           (varray-dimensions arr-view :copy t)))
+                 (underlying-total-size (varray-total-size arr-view)))
+             (multiple-value-bind (stds rank total-size min-index max-index)
+                 (process-dimensions-strides-offset dims strides offset
+                                                    :max-length
+                                                    underlying-total-size)
+               ;; el-type must be checked for validity. The easiest way to do
+               ;; that is to make sure it is a subtype of t.
+               (unless (subtypep el-type t)
+                 (error "element-type must be a subtype of t. It was ~a" el-type))
+               ;; All of the arguments have been validated. The dimensions and
+               ;; strides need to be converted to vectors of the right types.
+               ;; Additionally, the strides on any) dimensions of length zero or
+               ;; one should be set to zero.
+               (let* ((dims (coerce dims '(vector array-index-integer)))
+                      (stds (map '(vector fixnum)
+                                 #'(lambda (d s) (cond ((zerop d) 0)
+                                                       ((= 1 d) 0)
+                                                       (t s)))
+                                 dims stds)))
+                 ;; Make the view.
+                 (return-from make-view
+                   (%make-view :storage arr-view
+                               :element-type el-type
+                               :element-type-info (get-number-type-info el-type)
+                               :contiguous (determine-contiguity dims stds)
+                               :total-size total-size
+                               :rank rank
+                               :dimensions dims
+                               :offset offset
+                               :strides stds
+                               :flat-index-minimum min-index
+                               :flat-index-maximum max-index))))))
+       (change-arr-view (new-arr-view)
+         :report "Use a new arr-view."
+         :test (lambda (c) (declare (ignore c)) (not disable-restarts))
+         :interactive (lambda ()
+                        (princ "Enter a new arr-view (or array view): ")
+                        (list (eval (read))))
+         (setf arr-view new-arr-view))
+       (discard-element-type (discard-p)
+         :report "Discard the given element-type and use the default."
+         :test (lambda (c) (declare (ignore c)) (not disable-restarts))
+         :interactive (lambda ()
+                        (list (y-or-n-p "Discard the given element-type and use the default")))
+         (when discard-p
+           (setf element-type t
+                 element-type-p nil)))
+       (change-element-type (new-element-type)
+         :report "Use new element-type."
+         :test (lambda (c) (declare (ignore c)) (not disable-restarts))
+         :interactive (lambda ()
+                        (princ "Enter new element-type (typespec, keyword, or string): ")
+                        (list (eval (read))))
+         (setf element-type new-element-type
+               element-type-p t))
+       (discard-dimensions (discard-p)
+         :report "Discard the given dimensions and use the default."
+         :test (lambda (c) (declare (ignore c)) (not disable-restarts))
+         :interactive (lambda ()
+                        (list (y-or-n-p "Discard the given dimensions and use the default")))
+         (when discard-p
+           (setf dimensions nil
+                 dimensions-p nil)))
+       (change-dimensions (new-dimensions)
+         :report "Use new dimensions."
+         :test (lambda (c) (declare (ignore c)) (not disable-restarts))
+         :interactive (lambda ()
+                        (princ "Enter new dimensions (sequence of unsigned fixnum): ")
+                        (list (eval (read))))
+         (setf dimensions new-dimensions
+               dimensions-p t))
+       (change-strides (new-strides)
+         :report "Use new strides."
+         :test (lambda (c) (declare (ignore c)) (not disable-restarts))
+         :interactive (lambda ()
+                        (princ "Enter new strides (sequence of fixnum): ")
+                        (list (eval (read))))
+         (setf strides new-strides))
+       (change-offset (new-offset)
+         :report "Use a new offset."
+         :test (lambda (c) (declare (ignore c)) (not disable-restarts))
+         :interactive (lambda ()
+                        (princ "Enter a new offset (unsigned fixnum): ")
+                        (list (eval (read))))
+         (setf offset new-offset)))))
+    #+END_SRC
+
+*** Higher Level Constructors
+
+    The low level constructor ~make-view~ still requires the caller to have made the underlying {{{hspec(array)}}} or /view/ already.
+    The first higher level constructor allows a /view/ to be made where all elements have a particular value, that also handles the allocation of the underlying {{{hspec(array)}}}.
+    It must do some argument checking similar to ~make-view~ and thus shares some code in common with it .
+    Other higher level constructors can be made from ~make-view~ and ~make-view-full~ in such a way that they do not need to reproduce the full argument checking machinery yet again.
+
+    #+NAME: make-view-full
+    #+BEGIN_SRC lisp -n
+;;; Higher level constructor to make a view (while allocating the storage) where
+;;; all elements have the given initial value.
+
+(declaim (ftype (function (t t &key (:element-type t) (:strides t) (:offset t))
+                          view)
+                make-view-full))
+(defun make-view-full (value dimensions &key (element-type t element-type-p)
+                                          strides (offset 0))
+  "Function that makes a /view/ with newly allocated storage where all elements
+   are ~VALUE~.
+
+   ,* Arguments
+     + ~VALUE~ :: The initial value to use for all elements. If ~ELEMENT-TYPE~
+       is passed, ~VALUE~ must be a member of ~ELEMENT-TYPE~.
+     + ~DIMENSIONS~ :: /proper-list/ or /vector/ of /array-index-integer/
+       specifying the desired length along each axis/dimension.
+     + ~ELEMENT-TYPE~ :: /typespec/, /number-type-info/, or the /keyword/ or
+       /string/ version of the /typespec/ name for the elements. The default is
+       to find the narrowist number type that includes ~VALUE~.
+     + ~STRIDES~ :: /proper-list/ or /vector/ of /fixnum/ specifiying the stride
+       in elements for each axis/dimension. Must have the same length as
+       ~DIMENSIONS~. The default is CL/C contiguous strides for the given
+       ~DIMENSIONS~.
+     + ~OFFSET~ :: /array-flat-index-integer/ specifying the offset in elements
+       into the new array. The default is zero.
+
+   ,* Returns
+     + ~VIEW~ :: The resulting /view/.
+
+   ,* Correctable Errors
+     + ~TYPED-SEQUENCE-TYPE-ERROR~ :: If ~DIMENSIONS~ and/or ~STRIDES~ are the
+       wrong type.
+     + ~TYPE-ERROR~ :: If any of the other arguments are the wrong type.
+     + ~ERROR~ :: If ~STRIDES~ is not ~nil~ but doesn't have the same length as
+       ~DIMENSIONS~.
+     + ~RANK-LIMIT-ERROR~ :: If the maximum implementation allowed rank would is
+       exceeded.
+     + ~DIM-STRIDE-OFFSET-LOWER-BOUND-ERROR~ :: If the smallest flat index would
+       be negative.
+     + ~DIM-STRIDE-OFFSET-UPPER-BOUND-ERROR~ :: If the largest flat index would
+       be exceed the implementation limit, or ~MAX-LENGTH~ if it is given.
+
+   ,* Restarts
+     + ~CHANGE-VALUE~ :: Give a new value to ~VALUE~, which must be the first
+       and only argument.
+     + ~CHANGE-DIMENSIONS~ :: Give a new value to use for ~DIMENSIONS~, which
+       must be the first and only argument.
+     + ~DISCARD-ELEMENT-TYPE~ :: Discard the passed (or set by restart) value
+       of ~ELEMENT-TYPE~ and use the default instead. Must be passed a
+       /generalized-boolean/.
+     + ~CHANGE-ELEMENT-TYPE~ :: Give a new value to use for ~ELEMENT-TYPE~,
+       which must be the first and only argument.
+     + ~CHANGE-STRIDES~ :: Give a new value to use for ~STRIDES~ (or ~nil~ to
+       use the default), which must be the first and only argument.
+     + ~CHANGE-OFFSET~ :: Give a new value to use for ~OFFSET~, which must be
+       the first and only argument."
+  ;; Loop till all parameters are valid (if something is invalid and a restart
+  ;; is invoked to fix something, everything must be checked again). Then, once
+  ;; every test is passed, the underlying array can be made and control passed
+  ;; to make-view.
+  (loop
+    (restart-case
+        (multiple-value-bind (stds rank total-size min-index max-index)
+            (process-dimensions-strides-offset dimensions strides offset)
+          (declare (ignore rank total-size min-index))
+          ;; If an element type is not given, it is the narrowist number
+          ;; type that can fit it or if such a type isn't available, the
+          ;; result of type-of. Otherwise, it is what is passed if it is
+          ;; a list or non-keyword symbol. If it is a keywords or string, its
+          ;; number-type-info must be looked up to get the type.
+          (let ((el-type (if (not element-type-p)
+                             (number-type-info-type (find-narrowist-number-type (list value)))
+                             (ctypecase element-type
+                               ((or keyword string)
+                                (multiple-value-bind (info type)
+                                    (get-number-type-info element-type)
+                                  (if info
+                                      type
+                                      (error "element-type ~s has the wrong type"
+                                             element-type))))
+                               ((or symbol list) element-type)))))
+            ;; el-type must be checked for validity. The easiest way to do
+            ;; that is to make sure it is a subtype of t.
+            (unless (subtypep el-type t)
+              (error "element-type must be a subtype of t. It was ~a" el-type))
+            (unless (typep value el-type)
+              (error "The value ~a should be of type ~s but isn't." value el-type))
+            ;; The arguments that need to be validated now have been validated.
+            ;; The array can be allocated and everything else can be handled by
+            ;; make-view. For the underlying array, if the offset is 0 and the
+            ;; view would be CL/C contiguous; then the array's dimensions can
+            ;; match the desired dimensions. Otherwise, it should be a 1D array
+            ;; with enough elements to fit everything.
+            (return-from make-view-full
+              (make-view (make-array (if (and (zerop offset)
+                                              (eql :c (determine-contiguity dimensions stds)))
+                                         (coerce dimensions 'list)
+                                         (list (1+ max-index)))
+                                     :element-type el-type
+                                     :initial-element value)
+                         :element-type el-type
+                         :dimensions dimensions
+                         :offset offset
+                         :strides stds
+                         :disable-restarts t))))
+       (change-value (new-value)
+         :report "Use new value."
+         :interactive (lambda ()
+                        (princ "Enter the new fill value: ")
+                        (list (eval (read))))
+         (setf value new-value))
+       (change-dimensions (new-dimensions)
+         :report "Use new dimensions."
+         :interactive (lambda ()
+                        (princ "Enter new dimensions (sequence of unsigned fixnum): ")
+                        (list (eval (read))))
+         (setf dimensions new-dimensions))
+       (discard-element-type (discard-p)
+         :report "Discard the given element-type and use the default."
+         :interactive (lambda ()
+                        (list (y-or-n-p "Discard the given element-type and use the default")))
+         (when discard-p
+           (setf element-type t
+                 element-type-p nil)))
+       (change-element-type (new-element-type)
+         :report "Use new element-type."
+         :interactive (lambda ()
+                        (princ "Enter new element-type (typespec, keyword, or string): ")
+                        (list (eval (read))))
+         (setf element-type new-element-type
+               element-type-p t))
+       (change-strides (new-strides)
+         :report "Use new strides."
+         :interactive (lambda ()
+                        (princ "Enter new strides (sequence of fixnum): ")
+                        (list (eval (read))))
+         (setf strides new-strides))
+       (change-offset (new-offset)
+         :report "Use a new offset."
+         :interactive (lambda ()
+                        (princ "Enter a new offset (unsigned fixnum): ")
+                        (list (eval (read))))
+         (setf offset new-offset)))))
+    #+END_SRC
+
+*** Package Exports
+
+    The package exports for view and its related components, which will be in ~package.lisp~ (Section [[package.lisp]]), are
+
+    #+NAME: export-view
+    #+BEGIN_SRC lisp -n
+#:make-contiguous-strides
+#:determine-contiguity
+#:view
+#:view-p
+#:copy-view
+#:view-storage
+#:view-element-type
+#:view-number-p
+#:view-complex-p
+#:view-contiguous
+#:view-total-size
+#:view-rank
+#:view-dimensions
+#:view-offset
+#:view-strides
+#:varray-contiguous
+#:varray-dimension
+#:varray-dimensions
+#:varray-displacement
+#:varray-element-type
+#:varray-elementy-type-info
+#:varray-flat-index-maximum
+#:varray-flat-index-minimum
+#:varray-in-bounds-p
+#:varray-offset
+#:varray-rank
+#:varray-storage
+#:varray-strides
+#:varray-total-size
+#:rank-limit-error
+#:rank-limit-error-dimensions
+#:dim-stride-offset-bounds-error
+#:dim-stride-offset-bounds-error-index
+#:dim-stride-offset-bounds-error-dimensions
+#:dim-stride-offset-bounds-error-strides
+#:dim-stride-offset-bounds-error-offset
+#:dim-stride-offset-lower-bound-error
+#:dim-stride-offset-upper-bound-error
+#:dim-stride-offset-upper-bound-error-limit
+#:dim-stride-offset-upper-bound-error-limit-name
+#:make-view
+#:make-view-full
+    #+END_SRC
+
+
+** Final package.lisp File <<package.lisp>>
+
+   The final =package.lisp= file where all the packages are made by combining all the
+   entries for the respective packages into one file.
+
+   #+NAME: package-dot-lisp
+   #+BEGIN_SRC lisp -n :noweb yes :tangle ../src/package.lisp
+;;;; package.lisp
+
+<<copyright>>
+
+(defpackage #:numericl
+  (:use #:cl)
+  (:export
+   <<export-check-typed-list-vector>>
+   <<export-numerical-aliases>>
+   <<export-view>>))
+   #+END_SRC
+
+
+** Final numerical.lisp File
+
+   The final =numerical.lisp= file where all major code belongs in is
+
+   #+NAME: numerical-dot-lisp
+   #+BEGIN_SRC lisp -n :noweb yes :tangle ../src/numerical.lisp
+;;;; numerical.lisp
+
+<<copyright>>
+
+<<optimize-safety>>
+
+(in-package :numericl)
+
+<<typed-sequence-type-error>>
+
+<<check-typed-lists-vectors>>
+
+<<array-index-types>>
+
+<<unsigned-integer-and-fixnum>>
+
+<<complex-integer-and-rational-types-base>>
+
+<<c-and-complex-integer-types-base>>
+
+<<complex-float-types-base>>
+
+
+
+<<number-type-properties>>
+
+<<sub-number-type-p>>
+
+<<number-types-table>>
+
+<<number-type-info-lookup>>
+
+<<number-type-search>>
+
+<<narrow-number-types>>
+
+<<find-narrowist-number-type>>
+
+<<make-number-type-graphviz-diagram>>
+
+
+
+<<contiguous-stride-generating>>
+
+<<determine-contiguity>>
+
+<<view-definition>>
+
+<<varray-generic-equivalents>>
+
+<<rank-dim-stride-offset-error-conditions>>
+
+<<process-dimensions-strides-offsets>>
+
+<<make-view>>
+
+<<make-view-full>>
+   #+END_SRC
+
+
+** ASDF File for Testing numericl-tests.asd
+
+   The metadata for the unit tests (done using the {{{quickdocs(prove)}}} package) is
+
+   #+NAME: asdf-metadata-test
+   #+BEGIN_SRC lisp -n
+(asdf:defsystem "numericl-tests"
+  :description "Test system for NumeriCL."
+  :author "Freja Nordsiek"
+  :license "MIT"
+   #+END_SRC
+
+   And then the other systems it directly depends on are defined, which includes ~numericl~.
+
+   #+NAME: asdf-dependencies-test
+   #+BEGIN_SRC lisp -n
+  :defsystem-depends-on ("prove-asdf")
+  :depends-on ("numericl"
+               "prove")
+   #+END_SRC
+
+   The components are in the ="tests"= subdirectory.
+   They don't depend on each other.
+
+   #+NAME: asdf-components-test
+   #+BEGIN_SRC lisp -n
+  :pathname "tests"
+  :components ((:test-file "check-typed-list-vector-macros"))
+   #+END_SRC
+
+   The test operation is added following [[https://github.com/fukamachi/prove][prove]]'s documentation on ASDF integration.
+
+   #+NAME: asdf-testing-test
+   #+BEGIN_SRC lisp -n
+  :perform (test-op :after (op c)
+                    (funcall (intern #.(string :run) :prove) c))
+   #+END_SRC
+
+   Putting all of these together, the complete ASDF file =numericl-tests.asd= is made.
+
+   #+NAME: numericl-tests-dot-asd
+   #+BEGIN_SRC lisp -n :noweb yes :tangle ../numericl-tests.asd
+;;;; numericl-tests.asd
+
+<<copyright>>
+
+<<asdf-metadata-test>>
+<<asdf-dependencies-test>>
+<<asdf-components-test>>
+<<asdf-testing-test>>)
+   #+END_SRC
+
+
+** Running Unit Tests
+
+   The result of running all of the unit-tests, with color turned off (limitations of {{{orgmode}}} export), is done below.
+   Normally at the REPL, the methodology in the ~let*~ form wouldn't need to be done.
+   But it must be here because the ~prove~ package isn't loaded before compiling the code if it is the first code run in a session.
+   The code does the loading and then must disable color and call ~prove:run~ in a very indirect fashion.
+
+   #+NAME: running-unit-tests
+   #+BEGIN_SRC lisp -n :results output :exports both
+(let ((*standard-output* (make-broadcast-stream))
+      (*error-output* (make-broadcast-stream)))
+  (asdf:load-systems :numericl-tests))
+(let* ((sym (find-symbol "*ENABLE-COLORS*" 'prove))
+       (value (symbol-value sym)))
+  (unwind-protect
+       (progn (setf (symbol-value sym) nil)
+              (funcall (symbol-function (find-symbol "RUN" 'prove))
+                       :numericl-tests :reporter :fiveam))
+    (setf (symbol-value sym) value)))
+   #+END_SRC
+
+   #+RESULTS: running-unit-tests
+   #+begin_example
+   To load "numericl-tests":
+     Load 1 ASDF system:
+       numericl-tests
+   ; Loading "numericl-tests"
+
+
+   Running a test file '/home/fnordsie/projects/cl/myprojects/numericl/tests/check-typed-list-vector-macros.lisp'
+   ..........
+    Did 10 checks.
+       Pass: 10 (100%)
+       Fail: 0 (  0%)
+
+   Summary:
+     All 1 file passed.
+   #+end_example
+
