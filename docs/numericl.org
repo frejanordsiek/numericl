@@ -2681,7 +2681,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
                ;; el-type must be checked for validity. The easiest way to do
                ;; that is to make sure it is a subtype of t.
                (unless (subtypep el-type t)
-                 (error "element-type must be a subtype of t. It was ~a" el-type))
+                 (error "element-type, ~s, doesn't appear to be a typespec." el-type))
                ;; All of the arguments have been validated. The dimensions and
                ;; strides need to be converted to vectors of the right types.
                ;; Additionally, the strides on any) dimensions of length zero or
@@ -2853,7 +2853,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
             ;; el-type must be checked for validity. The easiest way to do
             ;; that is to make sure it is a subtype of t.
             (unless (subtypep el-type t)
-              (error "element-type must be a subtype of t. It was ~a" el-type))
+              (error "element-type, ~s, doesn't appear to be a typespec." el-type))
             (unless (typep value el-type)
               (error "The value ~a should be of type ~s but isn't." value el-type))
             ;; The arguments that need to be validated now have been validated.
