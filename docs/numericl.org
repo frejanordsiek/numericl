@@ -2656,55 +2656,48 @@ emacs --batch -l org numericl.org -f org-babel-tangle
            (unless (typep arr-view '(or array view))
              (error 'type-error :datum arr-view :expected-type '(or array view)))
            ;; If an element type is not given, it is whatever the type of the
-           ;; underlying storage is. Otherwise, it is what is passed if it is
-           ;; a list or non-keyword symbol. If it is a keywords or string, its
-           ;; number-type-info must be looked up to get the type.
-           (let ((el-type (if (not element-type-p)
-                              (varray-element-type arr-view)
-                              (ctypecase element-type
-                                ((or keyword string)
-                                 (multiple-value-bind (info type)
-                                     (get-number-type-info element-type)
-                                   (if info
-                                       type
-                                       (error "element-type ~s has the wrong type"
-                                              element-type))))
-                                ((or symbol list) element-type))))
-                 (dims (if dimensions-p
-                           dimensions
-                           (varray-dimensions arr-view :copy t)))
-                 (underlying-total-size (varray-total-size arr-view)))
-             (multiple-value-bind (stds rank total-size min-index max-index)
-                 (process-dimensions-strides-offset dims strides offset
-                                                    :max-length
-                                                    underlying-total-size)
-               ;; el-type must be checked for validity. The easiest way to do
-               ;; that is to make sure it is a subtype of t.
-               (unless (subtypep el-type t)
-                 (error "element-type, ~s, doesn't appear to be a typespec." el-type))
-               ;; All of the arguments have been validated. The dimensions and
-               ;; strides need to be converted to vectors of the right types.
-               ;; Additionally, the strides on any) dimensions of length zero or
-               ;; one should be set to zero.
-               (let* ((dims (coerce dims '(vector array-index-integer)))
-                      (stds (map '(vector fixnum)
-                                 #'(lambda (d s) (cond ((zerop d) 0)
-                                                       ((= 1 d) 0)
-                                                       (t s)))
-                                 dims stds)))
-                 ;; Make the view.
-                 (return-from make-view
-                   (%make-view :storage arr-view
-                               :element-type el-type
-                               :element-type-info (get-number-type-info el-type)
-                               :contiguous (determine-contiguity dims stds)
-                               :total-size total-size
-                               :rank rank
-                               :dimensions dims
-                               :offset offset
-                               :strides stds
-                               :flat-index-minimum min-index
-                               :flat-index-maximum max-index))))))
+           ;; underlying storage is. Otherwise, it is what is passed. The type
+           ;; must be looked up to get the number-type-info as well as the
+           ;; proper typespec.
+           (multiple-value-bind (info el-type)
+               (get-number-type-info (if element-type-p
+                                         element-type
+                                         (varray-element-type arr-view)))
+             (let ((dims (if dimensions-p
+                             dimensions
+                             (varray-dimensions arr-view :copy t)))
+                   (underlying-total-size (varray-total-size arr-view)))
+               (multiple-value-bind (stds rank total-size min-index max-index)
+                   (process-dimensions-strides-offset dims strides offset
+                                                      :max-length
+                                                      underlying-total-size)
+                 ;; el-type must be checked for validity. The easiest way to do
+                 ;; that is to make sure it is a subtype of t.
+                 (unless (subtypep el-type t)
+                   (error "element-type, ~s, doesn't appear to be a typespec." el-type))
+                 ;; All of the arguments have been validated. The dimensions and
+                 ;; strides need to be converted to vectors of the right types.
+                 ;; Additionally, the strides on any dimensions of length zero or
+                 ;; one should be set to zero.
+                 (let* ((dims (coerce dims '(vector array-index-integer)))
+                        (stds (map '(vector fixnum)
+                                   #'(lambda (d s) (cond ((zerop d) 0)
+                                                         ((= 1 d) 0)
+                                                         (t s)))
+                                   dims stds)))
+                   ;; Make the view.
+                   (return-from make-view
+                     (%make-view :storage arr-view
+                                 :element-type el-type
+                                 :element-type-info info
+                                 :contiguous (determine-contiguity dims stds)
+                                 :total-size total-size
+                                 :rank rank
+                                 :dimensions dims
+                                 :offset offset
+                                 :strides stds
+                                 :flat-index-minimum min-index
+                                 :flat-index-maximum max-index)))))))
        (change-arr-view (new-arr-view)
          :report "Use a new arr-view."
          :test (lambda (c) (declare (ignore c)) (not disable-restarts))
@@ -2834,22 +2827,16 @@ emacs --batch -l org numericl.org -f org-babel-tangle
         (multiple-value-bind (stds rank total-size min-index max-index)
             (process-dimensions-strides-offset dimensions strides offset)
           (declare (ignore rank total-size min-index))
-          ;; If an element type is not given, it is the narrowist number
-          ;; type that can fit it or if such a type isn't available, the
-          ;; result of type-of. Otherwise, it is what is passed if it is
-          ;; a list or non-keyword symbol. If it is a keywords or string, its
-          ;; number-type-info must be looked up to get the type.
-          (let ((el-type (if (not element-type-p)
-                             (number-type-info-type (find-narrowist-number-type (list value)))
-                             (ctypecase element-type
-                               ((or keyword string)
-                                (multiple-value-bind (info type)
-                                    (get-number-type-info element-type)
-                                  (if info
-                                      type
-                                      (error "element-type ~s has the wrong type"
-                                             element-type))))
-                               ((or symbol list) element-type)))))
+          ;; If an element type is not given, it is whatever the type of the
+          ;; underlying storage is. Otherwise, it is what is passed. The type
+          ;; must be looked up to get the number-type-info as well as the
+          ;; proper typespec.
+          (multiple-value-bind (info el-type)
+              (get-number-type-info (if element-type-p
+                                        element-type
+                                        (number-type-info-type
+                                         (find-narrowist-number-type (list value)))))
+            (declare (ignore info))
             ;; el-type must be checked for validity. The easiest way to do
             ;; that is to make sure it is a subtype of t.
             (unless (subtypep el-type t)
