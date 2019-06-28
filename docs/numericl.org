@@ -2622,12 +2622,71 @@ emacs --batch -l org numericl.org -f org-babel-tangle
             (determine-contiguity dimensions stds))))
     #+END_SRC
 
-    Then, we can write the low level constructor ~make-view~.
-    But, the higher level constructors will need to turn off all of ~make-view~'s restarts, so there is an additional keyword argument to disable restarts.
+    ~make-view~ and the other low-level constructor ~make-view-full~ share many of the same restarts for use in {{{hspec(restart-case)}}}.
+    So the shared {{{hspec(restart-case)}}} restarts will be defined here.
+    All of them refer to a keyword argument ~:disable-restarts~ that can be passed to the constructors to disable restarts.
     This is needed since some other constructors need to shadow some of the restarts and not have others potentially messing up validation.
 
-    #+NAME: make-view
+    First, a restart for discarding the ~ELEMENT-TYPE~ parameter passed as a keyword that has a ~element-type-p~ variable that is set if it was given.
+    This restart clears the element type allowing the default to be used.
+
+    #+NAME: make-view-restart-discard-element-type
     #+BEGIN_SRC lisp -n
+(discard-element-type (discard-p)
+  :report "Discard the given element-type and use the default."
+  :test (lambda (c) (declare (ignore c)) (not disable-restarts))
+  :interactive (lambda ()
+                 (list (y-or-n-p "Discard the given element-type and use the default")))
+  (when discard-p
+    (setf element-type t
+          element-type-p nil)))
+    #+END_SRC
+
+    Then a restart is needed for setting a new element type, which also sets the ~element-type-p~ flag.
+
+    #+NAME: make-view-restart-change-element-type
+    #+BEGIN_SRC lisp -n
+(change-element-type (new-element-type)
+  :report "Use new element-type."
+  :test (lambda (c) (declare (ignore c)) (not disable-restarts))
+  :interactive (lambda ()
+                 (princ "Enter new element-type (typespec, keyword, or string): ")
+                 (list (eval (read))))
+  (setf element-type new-element-type
+        element-type-p t))
+    #+END_SRC
+
+    A restart is also needed for setting the strides to a new value.
+
+    #+NAME: make-view-restart-change-strides
+    #+BEGIN_SRC lisp -n
+(change-strides (new-strides)
+  :report "Use new strides."
+  :test (lambda (c) (declare (ignore c)) (not disable-restarts))
+  :interactive (lambda ()
+                 (princ "Enter new strides (sequence of fixnum): ")
+                 (list (eval (read))))
+  (setf strides new-strides))
+    #+END_SRC
+
+    A restart is also needed for setting the offset to a new value.
+
+    #+NAME: make-view-restart-change-offset
+    #+BEGIN_SRC lisp -n
+(change-offset (new-offset)
+  :report "Use a new offset."
+  :test (lambda (c) (declare (ignore c)) (not disable-restarts))
+  :interactive (lambda ()
+                 (princ "Enter a new offset (unsigned fixnum): ")
+                 (list (eval (read))))
+  (setf offset new-offset))
+    #+END_SRC
+
+    Then, we can write the low level constructor ~make-view~.
+    But, the higher level constructors will need to turn off all of ~make-view~'s restarts, so there is an additional keyword argument to disable restarts.
+
+    #+NAME: make-view
+    #+BEGIN_SRC lisp -n :noweb yes
 ;; View constructor to take the place of the default constructor for the view
 ;; struct with full argument validation and generating of some of the slots
 ;; that depend only on the others (rather than passing them).
@@ -2738,22 +2797,8 @@ emacs --batch -l org numericl.org -f org-babel-tangle
                         (princ "Enter a new arr-view (or array view): ")
                         (list (eval (read))))
          (setf arr-view new-arr-view))
-       (discard-element-type (discard-p)
-         :report "Discard the given element-type and use the default."
-         :test (lambda (c) (declare (ignore c)) (not disable-restarts))
-         :interactive (lambda ()
-                        (list (y-or-n-p "Discard the given element-type and use the default")))
-         (when discard-p
-           (setf element-type t
-                 element-type-p nil)))
-       (change-element-type (new-element-type)
-         :report "Use new element-type."
-         :test (lambda (c) (declare (ignore c)) (not disable-restarts))
-         :interactive (lambda ()
-                        (princ "Enter new element-type (typespec, keyword, or string): ")
-                        (list (eval (read))))
-         (setf element-type new-element-type
-               element-type-p t))
+       <<make-view-restart-discard-element-type>>
+       <<make-view-restart-change-element-type>>
        (discard-dimensions (discard-p)
          :report "Discard the given dimensions and use the default."
          :test (lambda (c) (declare (ignore c)) (not disable-restarts))
@@ -2770,20 +2815,8 @@ emacs --batch -l org numericl.org -f org-babel-tangle
                         (list (eval (read))))
          (setf dimensions new-dimensions
                dimensions-p t))
-       (change-strides (new-strides)
-         :report "Use new strides."
-         :test (lambda (c) (declare (ignore c)) (not disable-restarts))
-         :interactive (lambda ()
-                        (princ "Enter new strides (sequence of fixnum): ")
-                        (list (eval (read))))
-         (setf strides new-strides))
-       (change-offset (new-offset)
-         :report "Use a new offset."
-         :test (lambda (c) (declare (ignore c)) (not disable-restarts))
-         :interactive (lambda ()
-                        (princ "Enter a new offset (unsigned fixnum): ")
-                        (list (eval (read))))
-         (setf offset new-offset)))))
+       <<make-view-restart-change-strides>>
+       <<make-view-restart-change-offset>>)))
     #+END_SRC
 
     The low-level constructor ~make-view~ still requires the caller to have made the underlying {{{hspec(array)}}} or /view/ already.
@@ -2792,7 +2825,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
     Higher level constructors can be made from ~make-view~ and ~make-view-full~ in such a way that they do not need to reproduce the full argument checking machinery yet again.
 
     #+NAME: make-view-full
-    #+BEGIN_SRC lisp -n
+    #+BEGIN_SRC lisp -n :noweb yes
 ;;; Low-level constructor to make a view (while allocating the storage) where
 ;;; all elements have the given initial value.
 
@@ -2911,36 +2944,10 @@ emacs --batch -l org numericl.org -f org-babel-tangle
                         (princ "Enter new dimensions (sequence of unsigned fixnum): ")
                         (list (eval (read))))
          (setf dimensions new-dimensions))
-       (discard-element-type (discard-p)
-         :report "Discard the given element-type and use the default."
-         :test (lambda (c) (declare (ignore c)) (not disable-restarts))
-         :interactive (lambda ()
-                        (list (y-or-n-p "Discard the given element-type and use the default")))
-         (when discard-p
-           (setf element-type t
-                 element-type-p nil)))
-       (change-element-type (new-element-type)
-         :report "Use new element-type."
-         :test (lambda (c) (declare (ignore c)) (not disable-restarts))
-         :interactive (lambda ()
-                        (princ "Enter new element-type (typespec, keyword, or string): ")
-                        (list (eval (read))))
-         (setf element-type new-element-type
-               element-type-p t))
-       (change-strides (new-strides)
-         :report "Use new strides."
-         :test (lambda (c) (declare (ignore c)) (not disable-restarts))
-         :interactive (lambda ()
-                        (princ "Enter new strides (sequence of fixnum): ")
-                        (list (eval (read))))
-         (setf strides new-strides))
-       (change-offset (new-offset)
-         :report "Use a new offset."
-         :test (lambda (c) (declare (ignore c)) (not disable-restarts))
-         :interactive (lambda ()
-                        (princ "Enter a new offset (unsigned fixnum): ")
-                        (list (eval (read))))
-         (setf offset new-offset)))))
+       <<make-view-restart-discard-element-type>>
+       <<make-view-restart-change-element-type>>
+       <<make-view-restart-change-strides>>
+       <<make-view-restart-change-offset>>)))
     #+END_SRC
 
 *** Higher Level Constructors
