@@ -61,21 +61,14 @@ Using listings must also be set with a bind.
 
 #+MACRO: color @@latex:\textcolor{$1}{$2}@@@@html:<span style="color: $1">$2<\span>@@
 
-#+MACRO: literate-programming [[https://wikipedia.org/wiki/Literate_programming][Literate Programming]]
-#+MACRO: emacs [[https://www.gnu.org/software/emacs][Emacs]]
-#+MACRO: orgmode [[https://orgmode.org][Org Mode]]
-#+MACRO: graphviz [[https://graphviz.org][Graphviz]]
-#+MACRO: latex [[https://www.latex-project.org][LaTeX]]
-
-
 * Introduction
 
   NumeriCL is *NOT* ready for use yet.
 
   NumeriCL is a Common Lisp library for working with numerical data in arrays.
-  It borrows a lot of ideas from {{{numpy}}} and is meant to work somewhat similarly, though its API and internals deviate in many ways and it doesn't have the wide range of capabilities and features that {{{numpy}}} has.
-  It mainly tries to match the capabilities of {{{numpy}}}'s [[https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html][ndarray]] type, rather the full {{{numpy}}} API.
-  For a CL library that follows the {{{numpy}}} API much more faithfully, consider [[https://github.com/numcl/numcl][Numcl]].
+  It borrows a lot of ideas from [[https://www.numpy.org][NumPy]] and is meant to work somewhat similarly, though its API and internals deviate in many ways and it doesn't have the wide range of capabilities and features that [[https://www.numpy.org][NumPy]] has.
+  It mainly tries to match the capabilities of [[https://www.numpy.org][NumPy]]'s [[https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html][ndarray]] type, rather the full [[https://www.numpy.org][NumPy]] API.
+  For a CL library that follows the [[https://www.numpy.org][NumPy]] API much more faithfully, consider [[https://github.com/numcl/numcl][Numcl]].
   NumeriCL is licensed under the permissive [[https://opensource.org/licenses/MIT][MIT license]].
 
 * Dependencies
@@ -88,17 +81,17 @@ Using listings must also be set with a bind.
 
   + [[https://github.com/fukamachi/prove][prove]]
 
-  Tangling this library from the {{{orgmode}}} source (this document) requires:
+  Tangling this library from the [[https://orgmode.org][Org Mode]] source (this document) requires:
 
-  + {{{emacs}}} with the following packages:
-    + {{{orgmode}}}
+  + [[https://www.gnu.org/software/emacs][Emacs]] with the following packages:
+    + [[https://orgmode.org][Org Mode]]
 
   Building the documentation requires:
 
-  + {{{emacs}}} with the following packages:
-    + {{{orgmode}}}
-  + {{{graphviz}}}
-  + If doing PDF export, {{{latex}}} with the following packages:
+  + [[https://www.gnu.org/software/emacs][Emacs]] with the following packages:
+    + [[https://orgmode.org][Org Mode]]
+  + [[https://graphviz.org][Graphviz]]
+  + If doing PDF export, [[https://www.latex-project.org][LaTeX]] with the following packages:
     + amsmath
     + amssymb
     + capt-of
