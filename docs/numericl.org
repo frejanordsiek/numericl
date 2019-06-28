@@ -339,8 +339,12 @@ emacs --batch -l org numericl.org -f org-babel-tangle
   :description
   "Array indexing, slicing, manipulation, etc. beyond the ANSI standard with math utilities."
   :version "0.1"
-  :author "Freja Nordsiek"
+  :author "Freja Nordsiek <fnordsie@posteo.net>"
   :license "MIT"
+  :mailto "fnordsie@posteo.net"
+  :homepage "https://github.com/frejanordsiek/numericl"
+  :bug-tracker "https://github.com/frejanordsiek/numericl/issues"
+  :source-control (:git "git@github.com:frejanordsiek/numericl.git")
    #+END_SRC
 
    And then the other systems it directly depends on are defined.
@@ -3128,8 +3132,12 @@ emacs --batch -l org numericl.org -f org-babel-tangle
    #+BEGIN_SRC lisp -n
 (asdf:defsystem "numericl-tests"
   :description "Test system for NumeriCL."
-  :author "Freja Nordsiek"
+  :author "Freja Nordsiek <fnordsie@posteo.net>"
   :license "MIT"
+  :mailto "fnordsie@posteo.net"
+  :homepage "https://github.com/frejanordsiek/numericl"
+  :bug-tracker "https://github.com/frejanordsiek/numericl/issues"
+  :source-control (:git "git@github.com:frejanordsiek/numericl.git")
    #+END_SRC
 
    And then the other systems it directly depends on are defined, which includes ~numericl~.
