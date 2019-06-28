@@ -1349,12 +1349,24 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 
     We need a function to lookup the information for a typespec, but also check the validity of the typespec.
     Typespecs could be given as symbols, strings, keywords, or lists with a symbol as the first element and up to two additional elements.
-    The number of additional elements (the arguments) is equal to the number of bounds in the number-type-info structure that are ~nil~.
-    So the function must count and compare the number of arguments for lists.
+    Symbol and list typespecs will be checked for validity and an error raised if it isn't valid (a condition ~invalid-typespec-error~ is defined for just this purpose).
 
     #+NAME: number-type-info-lookup
     #+BEGIN_SRC lisp -n
 ;;; number-type-info lookup, searching, etc. functions.
+
+(define-condition invalid-typespec-error (error)
+  ((datum :initarg :datum :initform nil :reader invalid-typespec-error-datum))
+  (:report (lambda (condition stream)
+             (format stream "~s is not a valid typespec."
+                     (invalid-typespec-error-datum condition))))
+  (:documentation
+   "Condition for invalid /typespecs/.
+
+    ,* Slots
+      + ~DATUM~ :: The offending datum. Initialized by the ~:datum~ argument and
+        read by ~invalid-typespec-error-datum~."))
+
 
 (declaim (ftype (function (t)
                           (values (or number-type-info null) t)) get-number-type-info))
@@ -1374,32 +1386,48 @@ emacs --batch -l org numericl.org -f org-babel-tangle
    ,* Uncorrectable Errors
      + ~TYPE-ERROR~ :: If ~TYPE~ isn't a /symbol/, /keyword/, /string/, or a
        /list/ with the first element being a /symbol/.
-     + ~ERRROR~ :: If ~TYPE~ is a /list/ that has too many arguments for its
-       respective /number-type-info/."
+     + ~INVALID-TYPESPEC-ERROR~ :: If ~TYPE~ is a /list/ or /symbol/ that isn't
+       a valid /typespec/."
   (let ((info (gethash type +builtin-number-types-table+)))
     (etypecase type
-      ((or symbol keyword string)
-       (cond ((and (symbolp type) (not (keywordp type)))
-              (values info type))
-             (info (values info (number-type-info-type info)))
-             (t (values nil nil))))
-      ;; If the whole type is in there, use it. Otherwise, we must look for
-      ;; the entry with the first symbol and check the argument number.
-      ((cons symbol list)
+      ;; For keywords and strings, info must be non-nil and the type gotten from
+      ;; the lookup.
+      ((or keyword string)
        (if info
-           (values info type)
-           (let ((info (gethash (first type) +builtin-number-types-table+)))
-             ;; Check that there aren't too many arguments. There
-             ;; is no problem if there is less
-             (when info
-               (let ((max-length
-                      (+ 1
-                         (if (number-type-info-lower-bound info) 0 1)
-                         (if (number-type-info-upper-bound info) 0 1))))
-                 (when (> (list-length type) max-length)
-                   (error "type ~a has more arguments than allowed (~s)."
-                          type (1- max-length)))))
-             (values info type)))))))
+           (values info (number-type-info-type info))
+           (values nil nil)))
+      ;; type is a typespec. It must first be checked for validity.
+      ;; If the whole type is in there, use it. Otherwise, we must look for
+      ;; the entry with the first symbol (the arguments were already checked by
+      ;; the validity check).
+      ((or symbol (cons symbol list))
+       (cond ((not (get-upgraded-array-element-type type))
+              (error 'invalid-typespec-error :datum type))
+             (info (values info type))
+             (t (values (gethash (first type) +builtin-number-types-table+) type)))))))
+    #+END_SRC
+
+    Where ~get-upgraded-array-element-type~ is a version of {{{hspec(upgraded-array-element-type)}}} that returns ~nil~ when given an invalid /typespec/ rather than signalling an error.
+    This can be easily made by wrapping {{{hspec(upgraded-array-element-type)}}} in a {{{hspec(handler-case)}}}.
+
+    #+NAME: get-upgraded-array-element-type
+    #+BEGIN_SRC lisp -n
+;;; Looking up upgraded array element types without errors.
+
+(declaim (ftype (function (t) (or symbol (cons symbol list) null))
+                get-upgraded-array-element-type))
+(defun get-upgraded-array-element-type (typespec)
+  " Get the upgraded array element type of a /typespec/ but without signalling
+    an error if it is invalid.
+
+   ,* Arguments
+     + ~TYPESPEC~ :: The /typespec/ to get the upgraded array element type of.
+
+   ,* Returns
+     + ~TYPE~ :: The /typespec/ of the upgraded element type or ~nil~ if
+       ~TYPESPEC~ isn't a valid type specification."
+  (handler-case (upgraded-array-element-type typespec)
+    (error () nil)))
     #+END_SRC
 
     The type heirarchy will be slightly different on different implementations and machines since {{{hspec(fixnum)}}} and the {{{hspec(float)}}} types can differ in size and format.
@@ -1778,6 +1806,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 #:complex-single-float
 #:complex-double-float
 #:complex-long-float
+#:get-upgraded-array-element-type
 #:number-type-info
 #:number-type-info-type
 #:number-type-info-exact
@@ -1791,6 +1820,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 #:number-type-info-p
 #:copy-number-type-info
 #:sub-number-type-info-p
+#:invalid-typespec-error
 #:get-number-type-info
 #:make-number-type-graphviz-diagram
 #:find-possible-number-types
@@ -2616,6 +2646,8 @@ emacs --batch -l org numericl.org -f org-babel-tangle
    ,* Correctable or Uncorrectable Errors
      + ~TYPED-SEQUENCE-TYPE-ERROR~ :: If ~DIMENSIONS~ and/or ~STRIDES~ are the
        wrong type.
+     + ~INVALID-TYPESPEC-ERROR~ :: If ~TYPE~ is a /list/ or /symbol/ that isn't
+       a valid /typespec/.
      + ~TYPE-ERROR~ :: If any of the other arguments are the wrong type.
      + ~ERROR~ :: If ~STRIDES~ is not ~nil~ but doesn't have the same length as
        ~DIMENSIONS~.
@@ -2671,10 +2703,6 @@ emacs --batch -l org numericl.org -f org-babel-tangle
                    (process-dimensions-strides-offset dims strides offset
                                                       :max-length
                                                       underlying-total-size)
-                 ;; el-type must be checked for validity. The easiest way to do
-                 ;; that is to make sure it is a subtype of t.
-                 (unless (subtypep el-type t)
-                   (error "element-type, ~s, doesn't appear to be a typespec." el-type))
                  ;; All of the arguments have been validated. The dimensions and
                  ;; strides need to be converted to vectors of the right types.
                  ;; Additionally, the strides on any dimensions of length zero or
@@ -2794,6 +2822,8 @@ emacs --batch -l org numericl.org -f org-babel-tangle
    ,* Correctable Errors
      + ~TYPED-SEQUENCE-TYPE-ERROR~ :: If ~DIMENSIONS~ and/or ~STRIDES~ are the
        wrong type.
+     + ~INVALID-TYPESPEC-ERROR~ :: If ~TYPE~ is a /list/ or /symbol/ that isn't
+       a valid /typespec/.
      + ~TYPE-ERROR~ :: If any of the other arguments are the wrong type.
      + ~ERROR~ :: If ~STRIDES~ is not ~nil~ but doesn't have the same length as
        ~DIMENSIONS~.
@@ -2837,10 +2867,6 @@ emacs --batch -l org numericl.org -f org-babel-tangle
                                         (number-type-info-type
                                          (find-narrowist-number-type (list value)))))
             (declare (ignore info))
-            ;; el-type must be checked for validity. The easiest way to do
-            ;; that is to make sure it is a subtype of t.
-            (unless (subtypep el-type t)
-              (error "element-type, ~s, doesn't appear to be a typespec." el-type))
             (unless (typep value el-type)
               (error "The value ~a should be of type ~s but isn't." value el-type))
             ;; The arguments that need to be validated now have been validated.
@@ -3000,6 +3026,8 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 
 <<complex-float-types-base>>
 
+
+<<get-upgraded-array-element-type>>
 
 
 <<number-type-properties>>
