@@ -1463,7 +1463,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
     #+END_SRC
 
     The type heirarchy will be slightly different on different implementations and machines since {{{hspec(fixnum)}}} and the {{{hspec(float)}}} types can differ in size and format.
-    It is useful to be able to make a graph of the type hierarchy in a particular environment, so we define a function that generates a type hierarchy graph in Graphviz dot format and returns it.
+    It is useful to be able to make a graph of the type hierarchy in a particular environment, so we define a function that generates a type hierarchy graph in {{{graphviz}}} dot format and returns it.
 
     #+NAME: make-number-type-graphviz-diagram
     #+BEGIN_SRC lisp -n
