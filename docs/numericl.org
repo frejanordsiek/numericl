@@ -2496,9 +2496,12 @@ emacs --batch -l org numericl.org -f org-babel-tangle
     #+NAME: process-dimensions-strides-offsets
     #+BEGIN_SRC lisp -n
 (declaim (ftype (function (t t t &key (:max-length t))
-                          (values (or vector list) array-rank-integer
+                          (values (vector array-index-integer)
+                                  (simple-array fixnum 1)
+                                  array-rank-integer
                                   array-flat-index-integer
-                                  array-flat-index-integer array-flat-index-integer))
+                                  array-flat-index-integer array-flat-index-integer
+                                  (member :c :f t nil)))
                 process-dimensions-strides-offset))
 (defun process-dimensions-strides-offset (dimensions strides offset &key max-length)
   " Validates and processes a given combination of dimensions, strides, and
@@ -2522,9 +2525,11 @@ emacs --batch -l org numericl.org -f org-babel-tangle
        checked.
 
    ,* Returns
-     + ~STDS~ :: /proper-list/ or /vector/ of /fixnum/ specifiying the stride
-       in elements for each axis/dimension. Will be ~STRIDES~ if ~STRIDES~ was
-       not ~nil~. Otherwise, this is generated and returned.
+     + ~DIMS~ :: /vector/ of /array-index-integer/ coerced from ~DIMENSIONS~
+       specifying the length along each axis/dimension.
+     + ~STDS~ :: /vector/ of /fixnum/ specifying the stride in elements for each
+       axis/dimension. Will ~equal~ to ~STRIDES~ in some cases, but is never
+       ~eql~ to it.
      + ~RANK~ :: /array-rank-integer/ specifying the array rank.
      + ~TOTAL-SIZE~ :: /array-flat-index-integer/ specifying the total number
        of elements.
@@ -2532,6 +2537,8 @@ emacs --batch -l org numericl.org -f org-babel-tangle
        can be reached with the given arguments.
      + ~Max-INDEX~ :: /array-flat-index-integer/ giving the largest index that
        can be reached with the given arguments.
+     + ~CONTIGUITY~ :: ~:c~, ~:f~, ~t~, or ~nil~ indicating the contiguity as
+       specified in ~determine-contiguity~.
 
    ,* Uncorrectable Errors
      + ~TYPED-SEQUENCE-TYPE-ERROR~ :: If ~DIMENSIONS~ and/or ~STRIDES~ are the
@@ -2601,7 +2608,18 @@ emacs --batch -l org numericl.org -f org-babel-tangle
              :index max-index
              :limit max-length :limit-name "MAX-LENGTH"
              :dimensions dimensions :strides stds :offset offset))
-    (values stds rank total-size min-index max-index)))
+    ;; All of the arguments have been validated and everything can be returned.
+    ;; The dimensions and strides need to be converted to vectors of the right
+    ;; types. Additionally, the strides on any dimensions of length zero or one
+    ;; should be set to zero.
+    (values (coerce dimensions '(vector array-index-integer))
+            (map '(vector fixnum)
+                 #'(lambda (d s) (cond ((zerop d) 0)
+                                       ((= 1 d) 0)
+                                       (t s)))
+                 dimensions stds)
+            rank total-size min-index max-index
+            (determine-contiguity dimensions stds))))
     #+END_SRC
 
     Then, we can write the low level constructor ~make-view~.
@@ -2697,37 +2715,26 @@ emacs --batch -l org numericl.org -f org-babel-tangle
                (get-number-type-info (if element-type-p
                                          element-type
                                          (varray-element-type arr-view)))
-             (let ((dims (if dimensions-p
-                             dimensions
-                             (varray-dimensions arr-view :copy t)))
-                   (underlying-total-size (varray-total-size arr-view)))
-               (multiple-value-bind (stds rank total-size min-index max-index)
-                   (process-dimensions-strides-offset dims strides offset
-                                                      :max-length
-                                                      underlying-total-size)
-                 ;; All of the arguments have been validated. The dimensions and
-                 ;; strides need to be converted to vectors of the right types.
-                 ;; Additionally, the strides on any dimensions of length zero or
-                 ;; one should be set to zero.
-                 (let* ((dims (coerce dims '(vector array-index-integer)))
-                        (stds (map '(vector fixnum)
-                                   #'(lambda (d s) (cond ((zerop d) 0)
-                                                         ((= 1 d) 0)
-                                                         (t s)))
-                                   dims stds)))
-                   ;; Make the view.
-                   (return-from make-view
-                     (%make-view :storage arr-view
-                                 :element-type el-type
-                                 :element-type-info info
-                                 :contiguous (determine-contiguity dims stds)
-                                 :total-size total-size
-                                 :rank rank
-                                 :dimensions dims
-                                 :offset offset
-                                 :strides stds
-                                 :flat-index-minimum min-index
-                                 :flat-index-maximum max-index)))))))
+             (multiple-value-bind (dims stds rank total-size min-index max-index contiguity)
+                 (process-dimensions-strides-offset (if dimensions-p
+                                                        dimensions
+                                                        (varray-dimensions arr-view :copy t))
+                                                    strides offset
+                                                    :max-length
+                                                    (varray-total-size arr-view))
+               ;; All of the arguments have been validated. Make the view.
+               (return-from make-view
+                 (%make-view :storage arr-view
+                             :element-type el-type
+                             :element-type-info info
+                             :contiguous contiguity
+                             :total-size total-size
+                             :rank rank
+                             :dimensions dims
+                             :offset offset
+                             :strides stds
+                             :flat-index-minimum min-index
+                             :flat-index-maximum max-index)))))
        (change-arr-view (new-arr-view)
          :report "Use a new arr-view."
          :test (lambda (c) (declare (ignore c)) (not disable-restarts))
@@ -2856,9 +2863,8 @@ emacs --batch -l org numericl.org -f org-babel-tangle
   ;; to make-view.
   (loop
     (restart-case
-        (multiple-value-bind (stds rank total-size min-index max-index)
+        (multiple-value-bind (dims stds rank total-size min-index max-index contiguity)
             (process-dimensions-strides-offset dimensions strides offset)
-          (declare (ignore rank total-size min-index))
           ;; If an element type is not given, it is whatever the type of the
           ;; underlying storage is. Otherwise, it is what is passed. The type
           ;; must be looked up to get the number-type-info as well as the
@@ -2868,27 +2874,32 @@ emacs --batch -l org numericl.org -f org-babel-tangle
                                         element-type
                                         (number-type-info-type
                                          (find-narrowist-number-type (list value)))))
-            (declare (ignore info))
             (unless (typep value el-type)
               (error "The value ~a should be of type ~s but isn't." value el-type))
             ;; The arguments that need to be validated now have been validated.
-            ;; The array can be allocated and everything else can be handled by
-            ;; make-view. For the underlying array, if the offset is 0 and the
-            ;; view would be CL/C contiguous; then the array's dimensions can
-            ;; match the desired dimensions. Otherwise, it should be a 1D array
-            ;; with enough elements to fit everything.
+            ;; The array can be allocated and the view made. For the underlying
+            ;; array, if the offset is 0 and the view would be CL/C contiguous;
+            ;; then the array's dimensions can match the desired dimensions.
+            ;; Otherwise, it should be a 1D array with enough elements to fit
+            ;; everything.
             (return-from make-view-full
-              (make-view (make-array (if (and (zerop offset)
-                                              (eql :c (determine-contiguity dimensions stds)))
-                                         (coerce dimensions 'list)
-                                         (list (1+ max-index)))
-                                     :element-type el-type
-                                     :initial-element value)
-                         :element-type el-type
-                         :dimensions dimensions
-                         :offset offset
-                         :strides stds
-                         :disable-restarts t))))
+              (%make-view :storage
+                          (make-array (if (and (zerop offset)
+                                               (eql :c (determine-contiguity dims stds)))
+                                          (coerce dims 'list)
+                                          (list (1+ max-index)))
+                                      :element-type el-type
+                                      :initial-element value)
+                          :element-type el-type
+                          :element-type-info info
+                          :contiguous contiguity
+                          :total-size total-size
+                          :rank rank
+                          :dimensions dims
+                          :offset offset
+                          :strides stds
+                          :flat-index-minimum min-index
+                          :flat-index-maximum max-index))))
        (change-value (new-value)
          :report "Use new value."
          :interactive (lambda ()
