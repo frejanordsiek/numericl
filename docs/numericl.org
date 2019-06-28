@@ -2802,11 +2802,12 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 ;;; Higher level constructor to make a view (while allocating the storage) where
 ;;; all elements have the given initial value.
 
-(declaim (ftype (function (t t &key (:element-type t) (:strides t) (:offset t))
+(declaim (ftype (function (t t &key (:element-type t) (:strides t) (:offset t)
+                             (:disable-restarts t))
                           view)
                 make-view-full))
 (defun make-view-full (value dimensions &key (element-type t element-type-p)
-                                          strides (offset 0))
+                                          strides (offset 0) disable-restarts)
   "Function that makes a /view/ with newly allocated storage where all elements
    are ~VALUE~.
 
@@ -2824,11 +2825,13 @@ emacs --batch -l org numericl.org -f org-babel-tangle
        ~DIMENSIONS~.
      + ~OFFSET~ :: /array-flat-index-integer/ specifying the offset in elements
        into the new array. The default is zero.
+     + ~DISABLE-RESTARTS~ :: /generalized-boolean/ that indicates whether all
+       restarts other than ~CHANGE-DISABLED-RESTARTS~ should be disabled or not.
 
    ,* Returns
      + ~VIEW~ :: The resulting /view/.
 
-   ,* Correctable Errors
+   ,* Correctable or Uncorrectable Errors
      + ~TYPED-SEQUENCE-TYPE-ERROR~ :: If ~DIMENSIONS~ and/or ~STRIDES~ are the
        wrong type.
      + ~INVALID-TYPESPEC-ERROR~ :: If ~TYPE~ is a /list/ or /symbol/ that isn't
@@ -2902,18 +2905,21 @@ emacs --batch -l org numericl.org -f org-babel-tangle
                           :flat-index-maximum max-index))))
        (change-value (new-value)
          :report "Use new value."
+         :test (lambda (c) (declare (ignore c)) (not disable-restarts))
          :interactive (lambda ()
                         (princ "Enter the new fill value: ")
                         (list (eval (read))))
          (setf value new-value))
        (change-dimensions (new-dimensions)
          :report "Use new dimensions."
+         :test (lambda (c) (declare (ignore c)) (not disable-restarts))
          :interactive (lambda ()
                         (princ "Enter new dimensions (sequence of unsigned fixnum): ")
                         (list (eval (read))))
          (setf dimensions new-dimensions))
        (discard-element-type (discard-p)
          :report "Discard the given element-type and use the default."
+         :test (lambda (c) (declare (ignore c)) (not disable-restarts))
          :interactive (lambda ()
                         (list (y-or-n-p "Discard the given element-type and use the default")))
          (when discard-p
@@ -2921,6 +2927,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
                  element-type-p nil)))
        (change-element-type (new-element-type)
          :report "Use new element-type."
+         :test (lambda (c) (declare (ignore c)) (not disable-restarts))
          :interactive (lambda ()
                         (princ "Enter new element-type (typespec, keyword, or string): ")
                         (list (eval (read))))
@@ -2928,12 +2935,14 @@ emacs --batch -l org numericl.org -f org-babel-tangle
                element-type-p t))
        (change-strides (new-strides)
          :report "Use new strides."
+         :test (lambda (c) (declare (ignore c)) (not disable-restarts))
          :interactive (lambda ()
                         (princ "Enter new strides (sequence of fixnum): ")
                         (list (eval (read))))
          (setf strides new-strides))
        (change-offset (new-offset)
          :report "Use a new offset."
+         :test (lambda (c) (declare (ignore c)) (not disable-restarts))
          :interactive (lambda ()
                         (princ "Enter a new offset (unsigned fixnum): ")
                         (list (eval (read))))
