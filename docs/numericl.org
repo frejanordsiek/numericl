@@ -2658,7 +2658,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
      + ~OFFSET~ :: /array-flat-index-integer/ specifying the offset in elements
        into ~ARR-VIEW~ to be displaced by. The default is zero.
      + ~DISABLE-RESTARTS~ :: /generalized-boolean/ that indicates whether all
-       restarts other than ~CHANGE-DISABLED-RESTARTS~ should be disabled or not.
+       restarts should be disabled or not.
 
    ,* Returns
      + ~VIEW~ :: The resulting /view/.
@@ -2679,10 +2679,6 @@ emacs --batch -l org numericl.org -f org-babel-tangle
        be exceed the implementation limit, or ~MAX-LENGTH~ if it is given.
 
    ,* Restarts
-     + ~CHANGE-DISABLED-RESTARTS~ :: Give a new value for ~DISABLE-RESTARTS~.
-       This restart is only available at the beginning of execution when
-       ~DISABLED-RESTARTS~ is being checked. Takes the new value as its first
-       argument. It cannot be disabled.
      + ~CHANGE-ARR-VIEW~ :: Give a new value to ~ARR-VIEW~, which must be the
        first and only argument.
      + ~DISCARD-ELEMENT-TYPE~ :: Discard the passed (or set by restart) value
@@ -2826,7 +2822,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
      + ~OFFSET~ :: /array-flat-index-integer/ specifying the offset in elements
        into the new array. The default is zero.
      + ~DISABLE-RESTARTS~ :: /generalized-boolean/ that indicates whether all
-       restarts other than ~CHANGE-DISABLED-RESTARTS~ should be disabled or not.
+       restarts should be disabled or not.
 
    ,* Returns
      + ~VIEW~ :: The resulting /view/.
