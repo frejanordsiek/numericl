@@ -2371,10 +2371,10 @@ emacs --batch -l org numericl.org -f org-babel-tangle
                          (t nil))))))))
     #+END_SRC
 
-*** Low Level View Constructor
+*** Low Level View Constructors
 
-    With the low-level constructor, the generic property readers, and the contiguity functions; we can finally make a /view/.
-    Fundamentally, we only need an {{{hspec(array)}}} or /view/ as the underlying storage, called ~ARR-VIEW~ in the function.
+    With the raw constructor, the generic property readers, and the contiguity functions; we can finally make a /view/.
+    For the first low level constructor ~make-veiw~, fundamentally, we only need an {{{hspec(array)}}} or /view/ as the underlying storage, called ~ARR-VIEW~ in the function.
     All required slot values can be pulled from or generated from ~ARR-VIEW~ and the other slot values.
     So, the function only takes overrides to the defaults; which are just the ~element-type~, ~dimensions~, ~strides~, and ~offset~.
     The rest can be gotten from those.
@@ -2786,16 +2786,14 @@ emacs --batch -l org numericl.org -f org-babel-tangle
          (setf offset new-offset)))))
     #+END_SRC
 
-*** Higher Level Constructors
-
-    The low level constructor ~make-view~ still requires the caller to have made the underlying {{{hspec(array)}}} or /view/ already.
-    The first higher level constructor allows a /view/ to be made where all elements have a particular value, that also handles the allocation of the underlying {{{hspec(array)}}}.
-    It must do some argument checking similar to ~make-view~ and thus shares some code in common with it .
-    Other higher level constructors can be made from ~make-view~ and ~make-view-full~ in such a way that they do not need to reproduce the full argument checking machinery yet again.
+    The low-level constructor ~make-view~ still requires the caller to have made the underlying {{{hspec(array)}}} or /view/ already.
+    Another low-level constructor, ~make-view-full~, is needed that makes a /view/ to be made where all elements have a particular value and also handles the allocation of the underlying {{{hspec(array)}}}.
+    It must do some argument checking similar to ~make-view~ and thus shares some code in common with it.
+    Higher level constructors can be made from ~make-view~ and ~make-view-full~ in such a way that they do not need to reproduce the full argument checking machinery yet again.
 
     #+NAME: make-view-full
     #+BEGIN_SRC lisp -n
-;;; Higher level constructor to make a view (while allocating the storage) where
+;;; Low-level constructor to make a view (while allocating the storage) where
 ;;; all elements have the given initial value.
 
 (declaim (ftype (function (t t &key (:element-type t) (:strides t) (:offset t)
@@ -2945,6 +2943,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
          (setf offset new-offset)))))
     #+END_SRC
 
+*** Higher Level Constructors
 *** Package Exports
 
     The package exports for view and its related components, which will be in ~package.lisp~ (Section [[package.lisp]]), are
