@@ -1369,7 +1369,9 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 
 
 (declaim (ftype (function (t)
-                          (values (or number-type-info null) t)) get-number-type-info))
+                          (values (or number-type-info null)
+                                  (or symbol (cons symbol list) null)))
+                get-number-type-info))
 (defun get-number-type-info (type)
   "Lookup the /number-type-info/ and /typespec/ for the given ~TYPE~.
 
