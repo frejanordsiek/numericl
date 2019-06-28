@@ -73,6 +73,8 @@ Using listings must also be set with a bind.
 #+MACRO: literate-programming [[https://wikipedia.org/wiki/Literate_programming][Literate Programming]]
 #+MACRO: emacs [[https://www.gnu.org/software/emacs][Emacs]]
 #+MACRO: orgmode [[https://orgmode.org][Org Mode]]
+#+MACRO: graphviz [[https://graphviz.org][Graphviz]]
+#+MACRO: latex [[https://www.latex-project.org][LaTeX]]
 
 #+MACRO: asdf [[https://common-lisp.net/project/asdf][ASDF]]
 #+MACRO: numpy [[https://www.numpy.org][NumPy]]
@@ -113,6 +115,34 @@ Using listings must also be set with a bind.
   The unit tests depend on the same libraries in addition to:
 
   + [[https://github.com/fukamachi/prove][prove]]
+
+  Tangling this library from the {{{orgmode}}} source (this document) requires:
+
+  + {{{emacs}}} with the following packages:
+    + {{{orgmode}}}
+
+  Building the documentation requires:
+
+  + {{{emacs}}} with the following packages:
+    + {{{orgmode}}}
+  + {{{graphviz}}}
+  + If doing PDF export, {{{latex}}} with the following packages:
+    + amsmath
+    + amssymb
+    + capt-of
+    + fontenc
+    + geometry
+    + graphicx
+    + grrffile
+    + hyperref
+    + inputenc
+    + listings
+    + longtable
+    + rotating
+    + textcomp
+    + ulem
+    + wrapfig
+    + xcolor
 
   This library is developed and tesed on the following CL implementations:
 
