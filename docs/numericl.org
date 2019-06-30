@@ -1914,7 +1914,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
   (storage (make-array nil :element-type 'number)
            :read-only t
            :type (or array view))
-  (element-type 'number :read-only t :type t)
+  (element-type 'number :read-only t :type (or symbol (cons symbol list)))
   (element-type-info nil :read-only t :type (or number-type-info null))
   (contiguous nil :read-only t :type (member :c :f t nil))
   (total-size 0 :read-only t :type array-flat-index-integer)
