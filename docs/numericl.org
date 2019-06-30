@@ -2530,7 +2530,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
     #+NAME: process-dimensions-strides-offsets
     #+BEGIN_SRC lisp -n
 (declaim (ftype (function (t t t &key (:max-length t))
-                          (values (vector array-index-integer)
+                          (values (simple-array array-index-integer 1)
                                   (simple-array fixnum 1)
                                   array-rank-integer
                                   array-flat-index-integer
@@ -2645,8 +2645,10 @@ emacs --batch -l org numericl.org -f org-babel-tangle
     ;; All of the arguments have been validated and everything can be returned.
     ;; The dimensions and strides need to be converted to vectors of the right
     ;; types. Additionally, the strides on any dimensions of length zero or one
-    ;; should be set to zero.
-    (values (coerce dimensions '(vector array-index-integer))
+    ;; should be set to zero. dimensions can't be coerced because we want to
+    ;; guarantee that the returned new dimensions is a new copy and is a
+    ;; simple-array
+    (values (concatenate '(vector array-index-integer) dimensions)
             (map '(vector fixnum)
                  #'(lambda (d s) (cond ((zerop d) 0)
                                        ((= 1 d) 0)
@@ -2807,7 +2809,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
              (multiple-value-bind (dims stds rank total-size min-index max-index contiguity)
                  (process-dimensions-strides-offset (if dimensions-p
                                                         dimensions
-                                                        (varray-dimensions arr-view :copy t))
+                                                        (varray-dimensions arr-view :copy nil))
                                                     strides offset
                                                     :max-length
                                                     (varray-total-size arr-view))
