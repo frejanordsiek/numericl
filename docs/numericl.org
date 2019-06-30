@@ -2949,7 +2949,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
             (return-from make-view-full
               (%make-view :storage
                           (make-array (if (and (zerop offset)
-                                               (eql :c (determine-contiguity dims stds)))
+                                               (eql :c contiguity))
                                           (coerce dims 'list)
                                           (list (1+ max-index)))
                                       :element-type el-type
