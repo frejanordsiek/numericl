@@ -2858,6 +2858,21 @@ emacs --batch -l org numericl.org -f org-babel-tangle
     It must do some argument checking similar to ~make-view~ and thus shares some code in common with it.
     Higher level constructors can be made from ~make-view~ and ~make-view-full~ in such a way that they do not need to reproduce the full argument checking machinery yet again.
 
+    First, we need another restart that changes dimensions when dimensions is a required argument, since the restart will be needed here and in the higher-level constructors.
+
+    #+NAME: make-view-restart-change-dimensions-required-arg
+    #+BEGIN_SRC lisp -n
+(change-dimensions (new-dimensions)
+  :report "Use new dimensions."
+  :test (lambda (c) (declare (ignore c)) (not disable-restarts))
+  :interactive (lambda ()
+                 (princ "Enter new dimensions (sequence of unsigned fixnum): ")
+                 (list (eval (read))))
+  (setf dimensions new-dimensions))
+    #+END_SRC
+
+    Then ~make-view-full~ is
+
     #+NAME: make-view-full
     #+BEGIN_SRC lisp -n :noweb yes
 ;;; Low-level constructor to make a view (while allocating the storage) where
@@ -2899,7 +2914,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
        a valid /typespec/.
      + ~TYPE-ERROR~ :: If any of the other arguments are the wrong type.
      + ~ERROR~ :: If ~STRIDES~ is not ~nil~ but doesn't have the same length as
-       ~DIMENSIONS~.
+       ~DIMENSIONS~ or ~VALUE~ is not of the type specified by ~ELEMENT-TYPE~.
      + ~RANK-LIMIT-ERROR~ :: If the maximum implementation allowed rank would is
        exceeded.
      + ~DIM-STRIDE-OFFSET-LOWER-BOUND-ERROR~ :: If the smallest flat index would
@@ -2971,13 +2986,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
                         (princ "Enter the new fill value: ")
                         (list (eval (read))))
          (setf value new-value))
-       (change-dimensions (new-dimensions)
-         :report "Use new dimensions."
-         :test (lambda (c) (declare (ignore c)) (not disable-restarts))
-         :interactive (lambda ()
-                        (princ "Enter new dimensions (sequence of unsigned fixnum): ")
-                        (list (eval (read))))
-         (setf dimensions new-dimensions))
+       <<make-view-restart-change-dimensions-required-arg>>
        <<make-view-restart-discard-element-type>>
        <<make-view-restart-change-element-type>>
        <<make-view-restart-change-strides>>
@@ -2985,6 +2994,167 @@ emacs --batch -l org numericl.org -f org-babel-tangle
     #+END_SRC
 
 *** Higher Level Constructors
+
+    Two very important constructors are making a /view/ where all elements are zero and all elements are one/unity.
+    This requires that the element type be able to be resolved to a /number-type-info/.
+    First, we need a shared restart for the two constructors that allows the element type to be changed when it is a required argument.
+
+    #+NAME: make-view-restart-change-element-type-required-arg
+    #+BEGIN_SRC lisp -n
+(change-element-type (new-element-type)
+  :report "Use new element-type."
+  :test (lambda (c) (declare (ignore c)) (not disable-restarts))
+  :interactive (lambda ()
+                 (princ "Enter new element-type (typespec, keyword, or string): ")
+                 (list (eval (read))))
+  (setf element-type new-element-type))
+    #+END_SRC
+
+    Then the two constructors ~make-view-zeros~ and ~make-view-ones~ can be defined.
+
+    #+NAME: make-view-zeros-ones
+    #+BEGIN_SRC lisp -n :noweb yes
+;;; High level constructors for views of all zeros or ones.
+
+(declaim (ftype (function (t t &key (:strides t) (:offset t) (:disable-restarts t))
+                          view)
+                make-view-zeros make-view-ones))
+
+(defun make-view-zeros (element-type dimensions &key strides (offset 0) disable-restarts)
+  "Function that makes a /view/ with newly allocated storage where all elements
+   are zero.
+
+   ,* Arguments
+     + ~ELEMENT-TYPE~ :: /typespec/, /number-type-info/, or the /keyword/ or
+       /string/ version of the /typespec/ name for the elements. Must correspond
+       to a /number-type-info/.
+     + ~DIMENSIONS~ :: /proper-list/ or /vector/ of /array-index-integer/
+       specifying the desired length along each axis/dimension.
+     + ~STRIDES~ :: /proper-list/ or /vector/ of /fixnum/ specifiying the stride
+       in elements for each axis/dimension. Must have the same length as
+       ~DIMENSIONS~. The default is CL/C contiguous strides for the given
+       ~DIMENSIONS~.
+     + ~OFFSET~ :: /array-flat-index-integer/ specifying the offset in elements
+       into the new array. The default is zero.
+     + ~DISABLE-RESTARTS~ :: /generalized-boolean/ that indicates whether all
+       restarts should be disabled or not.
+
+   ,* Returns
+     + ~VIEW~ :: The resulting /view/.
+
+   ,* Correctable or Uncorrectable Errors
+     + ~TYPED-SEQUENCE-TYPE-ERROR~ :: If ~DIMENSIONS~ and/or ~STRIDES~ are the
+       wrong type.
+     + ~INVALID-TYPESPEC-ERROR~ :: If ~TYPE~ is a /list/ or /symbol/ that isn't
+       a valid /typespec/.
+     + ~TYPE-ERROR~ :: If any of the other arguments are the wrong type.
+     + ~ERROR~ :: If ~STRIDES~ is not ~nil~ but doesn't have the same length as
+       ~DIMENSIONS~,  a /number-type-info/ can't be found for ~ELEMENT-TYPE~, or
+       the value of zero for the looked up /number-type-info/ is not a member of
+       the type specified by ~ELEMENT-TYPE~.
+     + ~RANK-LIMIT-ERROR~ :: If the maximum implementation allowed rank would is
+       exceeded.
+     + ~DIM-STRIDE-OFFSET-LOWER-BOUND-ERROR~ :: If the smallest flat index would
+       be negative.
+     + ~DIM-STRIDE-OFFSET-UPPER-BOUND-ERROR~ :: If the largest flat index would
+       be exceed the implementation limit, or ~MAX-LENGTH~ if it is given.
+
+   ,* Restarts
+     + ~CHANGE-ELEMENT-TYPE~ :: Give a new value to use for ~ELEMENT-TYPE~,
+       which must be the first and only argument.
+     + ~CHANGE-DIMENSIONS~ :: Give a new value to use for ~DIMENSIONS~, which
+       must be the first and only argument.
+     + ~CHANGE-STRIDES~ :: Give a new value to use for ~STRIDES~ (or ~nil~ to
+       use the default), which must be the first and only argument.
+     + ~CHANGE-OFFSET~ :: Give a new value to use for ~OFFSET~, which must be
+       the first and only argument."
+  ;; Loop till all parameters to make the view are valid (if something is
+  ;; invalid and a restart is invoked to fix something, everything must be
+  ;; checked again). Most of the checking is done inside make-view-full
+  (loop
+    (restart-case
+        (multiple-value-bind (info el-type) (get-number-type-info element-type)
+          (unless info
+            (error "number-type-info not found for ~s" element-type))
+          (return-from make-view-zeros
+            (make-view-full (number-type-info-zero info) dimensions
+                            :element-type el-type
+                            :strides strides
+                            :offset offset
+                            :disable-restarts t)))
+      <<make-view-restart-change-element-type-required-arg>>
+      <<make-view-restart-change-dimensions-required-arg>>
+      <<make-view-restart-change-strides>>
+      <<make-view-restart-change-offset>>)))
+
+(defun make-view-ones (element-type dimensions &key strides (offset 0) disable-restarts)
+  "Function that makes a /view/ with newly allocated storage where all elements
+   are one/unity.
+
+   ,* Arguments
+     + ~ELEMENT-TYPE~ :: /typespec/, /number-type-info/, or the /keyword/ or
+       /string/ version of the /typespec/ name for the elements. Must correspond
+       to a /number-type-info/.
+     + ~DIMENSIONS~ :: /proper-list/ or /vector/ of /array-index-integer/
+       specifying the desired length along each axis/dimension.
+     + ~STRIDES~ :: /proper-list/ or /vector/ of /fixnum/ specifiying the stride
+       in elements for each axis/dimension. Must have the same length as
+       ~DIMENSIONS~. The default is CL/C contiguous strides for the given
+       ~DIMENSIONS~.
+     + ~OFFSET~ :: /array-flat-index-integer/ specifying the offset in elements
+       into the new array. The default is zero.
+     + ~DISABLE-RESTARTS~ :: /generalized-boolean/ that indicates whether all
+       restarts should be disabled or not.
+
+   ,* Returns
+     + ~VIEW~ :: The resulting /view/.
+
+   ,* Correctable or Uncorrectable Errors
+     + ~TYPED-SEQUENCE-TYPE-ERROR~ :: If ~DIMENSIONS~ and/or ~STRIDES~ are the
+       wrong type.
+     + ~INVALID-TYPESPEC-ERROR~ :: If ~TYPE~ is a /list/ or /symbol/ that isn't
+       a valid /typespec/.
+     + ~TYPE-ERROR~ :: If any of the other arguments are the wrong type.
+     + ~ERROR~ :: If ~STRIDES~ is not ~nil~ but doesn't have the same length as
+       ~DIMENSIONS~,  a /number-type-info/ can't be found for ~ELEMENT-TYPE~, or
+       the value of one/unity for the looked up /number-type-info/ is not a
+       member of the type specified by ~ELEMENT-TYPE~.
+     + ~RANK-LIMIT-ERROR~ :: If the maximum implementation allowed rank would is
+       exceeded.
+     + ~DIM-STRIDE-OFFSET-LOWER-BOUND-ERROR~ :: If the smallest flat index would
+       be negative.
+     + ~DIM-STRIDE-OFFSET-UPPER-BOUND-ERROR~ :: If the largest flat index would
+       be exceed the implementation limit, or ~MAX-LENGTH~ if it is given.
+
+   ,* Restarts
+     + ~CHANGE-ELEMENT-TYPE~ :: Give a new value to use for ~ELEMENT-TYPE~,
+       which must be the first and only argument.
+     + ~CHANGE-DIMENSIONS~ :: Give a new value to use for ~DIMENSIONS~, which
+       must be the first and only argument.
+     + ~CHANGE-STRIDES~ :: Give a new value to use for ~STRIDES~ (or ~nil~ to
+       use the default), which must be the first and only argument.
+     + ~CHANGE-OFFSET~ :: Give a new value to use for ~OFFSET~, which must be
+       the first and only argument."
+  ;; Loop till all parameters to make the view are valid (if something is
+  ;; invalid and a restart is invoked to fix something, everything must be
+  ;; checked again). Most of the checking is done inside make-view-full
+  (loop
+    (restart-case
+        (multiple-value-bind (info el-type) (get-number-type-info element-type)
+          (unless info
+            (error "number-type-info not found for ~s" element-type))
+          (return-from make-view-ones
+            (make-view-full (number-type-info-unity info) dimensions
+                            :element-type el-type
+                            :strides strides
+                            :offset offset
+                            :disable-restarts t)))
+      <<make-view-restart-change-element-type-required-arg>>
+      <<make-view-restart-change-dimensions-required-arg>>
+      <<make-view-restart-change-strides>>
+      <<make-view-restart-change-offset>>)))
+    #+END_SRC
+
 *** Package Exports
 
     The package exports for view and its related components, which will be in ~package.lisp~ (Section [[package.lisp]]), are
@@ -3033,6 +3203,8 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 #:dim-stride-offset-upper-bound-error-limit-name
 #:make-view
 #:make-view-full
+#:make-view-zeros
+#:make-view-ones
     #+END_SRC
 
 
@@ -3121,6 +3293,8 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 <<make-view>>
 
 <<make-view-full>>
+
+<<make-view-zeros-ones>>
    #+END_SRC
 
 
