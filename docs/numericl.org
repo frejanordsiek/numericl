@@ -3159,7 +3159,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 
 *** Indexing (naref And baref)
 
-    To build ~naref~ and ~baref~, we need some utility functions to go back and forth between indices and row-major indices.
+    To build ~naref~ and ~baref~, we need some utility functions to go back and forth between indices and row-major indices into the underlying storage.
     We will need some conditions for indexing errors first, though.
 
     #+NAME: indexing-conditions
@@ -3234,6 +3234,143 @@ emacs --batch -l org numericl.org -f org-babel-tangle
       + ~SIZE~ :: /(integer 0)/ indicating the maximum size that the index can
         be. Initialized with the ~:size~ argument and read by
         ~index-out-of-bounds-error-size~."))
+    #+END_SRC
+
+    As for the functions to go between indices and row-major indices, it will be useful to have different versions for indices passed as arguments, lists, and vectors.
+    Luckily, we can use the same version for {{{hspec(array)}}} and ~view~.
+    First, the functions for naref.
+
+    #+NAME: naref-indices-to-underlying-row-major
+    #+BEGIN_SRC lisp -n
+;;; naref style utility functions to go from indices to row-major indices into
+;;; the underlying storage.
+
+(declaim (ftype (function ((or view array) list) array-flat-index-integer)
+                %naref-indices-to-underlying-row-major-index-list))
+(defun %naref-indices-to-underlying-row-major-index-list (arr indices)
+  "Utility function to go between a /list/ of indices and the row-major index
+   into the underlying storage of ~ARR~ without broadcasting.
+
+   ,* Arguments
+     + ~ARR~ :: /array/ or /view/
+     + ~INDICES~ :: /list/ of /array-index-integer/ containing the sub-indices
+       for each axis. Each index must be between zero and the length of the axis
+       in ~ARR~ minus one, with zero being OK for dimensions higher than ~ARR~'s
+       rank.
+
+   ,* Returns
+     + ~UNDER-ROW-MAJOR-INDEX~ :: /array-flat-index-integer/ specifying the
+       equivalent row-major index into the underlying storage."
+  ;; The row-major index will be built axis by axis using the sub-index, the
+  ;; dimensions, and the strides. The row-major index can start as the value
+  ;; of offset so we don't need to add it later.
+  (let ((dimensions (varray-dimensions arr))
+        (strides (varray-strides arr))
+        (row-major-index (varray-offset arr)))
+    ;; We loop through the the axes starting from the first one and go till we
+    ;; run out of indices or axes, adding (* stride index) to row-major-index
+    ;; at each step. During each iteration, we need to check that the sub-index
+    ;; is an integer in the right range. If there are any remaining indices,
+    ;; they must all be integers and zero.
+    (do ((sub-indices indices (cdr sub-indices))
+         (axis 0 (1+ axis)))
+        ((or (not sub-indices) (>= axis (array-total-size dimensions)))
+         (let ((not-valid-index (member-if-not #'(lambda (index)
+                                                   (and (integerp index) (zerop index)))
+                                               sub-indices)))
+           (cond ((not not-valid-index) row-major-index)
+                 ((typep (car not-valid-index) 'array-index-integer)
+                  (error 'index-out-of-bounds-error
+                         :index (car not-valid-index)
+                         :size 0))
+                 (t (error 'index-type-error
+                           :index (car not-valid-index)
+                           :kind :axis)))))
+      (let ((index (car sub-indices)))
+        ;; If index is not an array index type, we need to signal an error.
+        ;; Then, if it passes this test, we need to make sure that it is smaller
+        ;; than dim and signal an error if it isn't.
+        (cond ((not (typep index 'array-index-integer))
+               (error 'index-type-error
+                      :index index
+                      :kind :axis))
+              ((>= index (aref dimensions axis))
+               (error 'index-out-of-bounds-error
+                      :index index
+                      :size (1- (aref dimensions axis))))
+              (t (incf row-major-index (* (aref strides axis) index))))))))
+
+(declaim (ftype (function ((or view array) &rest array-index-integer) array-flat-index-integer)
+                %naref-indices-to-underlying-row-major-index-args))
+(defun %naref-indices-to-underlying-row-major-index-args (arr &rest indices)
+  "Utility function to go between one or more index arguments and the row-major
+   index into the underlying storage of ~ARR~ without broadcasting.
+
+   ,* Arguments
+     + ~ARR~ :: /array/ or /view/
+     + ~INDICES~ :: One or more /array-index-integer/ that are the sub-indices
+       for each axis. Each index must be between zero and the length of the axis
+       in ~ARR~ minus one, with zero being OK for dimensions higher than ~ARR~'s
+       rank.
+
+   ,* Returns
+     + ~UNDER-ROW-MAJOR-INDEX~ :: /array-flat-index-integer/ specifying the
+       equivalent row-major index into the underlying storage."
+  (%naref-indices-to-underlying-row-major-index-list arr indices))
+
+(declaim (ftype (function ((or view array) vector) array-flat-index-integer)
+                %naref-indices-to-underlying-row-major-index-vec))
+(defun %naref-indices-to-underlying-row-major-index-vec (arr indices)
+  "Utility function to go between a /vector/ of indices and the row-major index
+   into the underlying storage of ~ARR~ without broadcasting.
+
+   ,* Arguments
+     + ~ARR~ :: /array/ or /view/
+     + ~INDICES~ :: /vector/ of /array-index-integer/ containing the sub-indices
+       for each axis. Each index must be between zero and the length of the axis
+       in ~ARR~ minus one, with zero being OK for dimensions higher than ~ARR~'s
+       rank.
+
+   ,* Returns
+     + ~UNDER-ROW-MAJOR-INDEX~ :: /array-flat-index-integer/ specifying the
+       equivalent row-major index into the underlying storage."
+  ;; The row-major index will be built axis by axis using the sub-index, the
+  ;; dimensions, and the strides. The row-major index can start as the value
+  ;; of offset so we don't need to add it later.
+  (let ((dimensions (varray-dimensions arr))
+        (strides (varray-strides arr))
+        (row-major-index (varray-offset arr)))
+    ;; We loop through the the axes starting from the first one and go till we
+    ;; run out of indices or axes, adding (* stride index) to row-major-index
+    ;; at each step. During each iteration, we need to check that the sub-index
+    ;; is an integer in the right range. If there are any remaining indices,
+    ;; they must all be integers and zero.
+    (do ((axis 0 (1+ axis)))
+        ((or (>= axis (array-total-size indices)) (>= axis (array-total-size dimensions)))
+         (let ((not-valid-index (position-if-not #'(lambda (index)
+                                                     (and (integerp index) (zerop index)))
+                                                 indices :start axis)))
+           (cond ((not not-valid-index) row-major-index)
+                 ((typep (aref indices not-valid-index) 'array-index-integer)
+                  (error 'index-out-of-bounds-error
+                         :index (aref indices not-valid-index)
+                         :size 0))
+                 (t (error 'index-type-error
+                           :index (aref indices not-valid-index)
+                           :kind :axis)))))
+      (let ((index (aref indices axis)))
+        ;; If index is not an array index type, we need to signal an error.
+        ;; Then, if it passes this test, we need to make sure that it is smaller
+        ;; than dim and signal an error if it isn't.
+        (cond ((not (typep index 'array-index-integer))
+               (error 'index-type-error
+                      :index index
+                      :kind :axis))
+              ((>= index (aref dimensions axis))
+               (error 'index-out-of-bounds-error
+                      :index index
+                      :size (1- (aref dimensions axis))))
+              (t (incf row-major-index (* (aref strides axis) index))))))))
     #+END_SRC
 
 *** Package Exports
@@ -3385,6 +3522,8 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 
 
 <<indexing-conditions>>
+
+<<naref-indices-to-underlying-row-major>>
    #+END_SRC
 
 
