@@ -3157,6 +3157,85 @@ emacs --batch -l org numericl.org -f org-babel-tangle
       <<make-view-restart-change-offset>>)))
     #+END_SRC
 
+*** Indexing (naref And baref)
+
+    To build ~naref~ and ~baref~, we need some utility functions to go back and forth between indices and row-major indices.
+    We will need some conditions for indexing errors first, though.
+
+    #+NAME: indexing-conditions
+    #+BEGIN_SRC lisp -n
+;;; Conditions for invalid array and view indices.
+
+(define-condition index-error (error)
+  ((index :initarg :index :initform nil :reader index-error-index))
+  (:report (lambda (condition stream)
+             (format stream "Index ~a is invalid." (index-error-index condition))))
+  (:documentation
+   "Base error for indexing errors. Has only the most minimal reporter which
+    just declares that ~INDEX~ is invalid.
+
+    ,* Slots
+      + ~INDEX~ :: The offending index. Initialized by the ~:index~ argument
+        and read by ~index-error-index~."))
+
+(define-condition index-type-error (index-error)
+  ((kind :initarg :kind
+         :initform :axis
+         :type (member :axis :flat :rank :broadcast)
+         :reader index-type-error-kind))
+  (:report
+   (lambda (condition stream)
+     ;; Make a list of the numericl type for the index (or just integer) and
+     ;; what that translates to in integer, unless it is already integer in
+     ;; which case there are no other elements (:broadcast).
+     (let ((type (ecase (index-type-error-kind condition)
+                   (:axis (list 'array-index-integer
+                                'integer 0 (1- array-dimension-limit)))
+                   (:flat (list 'array-flat-index-integer
+                                'integer 0 (1- array-total-size-limit)))
+                   (:rank (list 'array-rank-limit
+                                'integer 0 array-rank-limit))
+                   (:broadcast (list 'integer)))))
+       ;; If there is a translated integer type, it needs to be reported too.
+       ;; Otherwise, the leading element of type is enough to indicate what the
+       ;; index should have been.
+       (if (cdr type)
+           (format stream
+                   "Index ~a must be an ~s, which is ~a."
+                   (index-error-index condition)
+                   (car type)
+                   (cdr type))
+           (format stream
+                   "Index ~a must be an ~a."
+                   (index-error-index condition)
+                   (car type))))))
+
+  (:documentation
+   "Error for an index being the wrong type.
+
+    ,* Slots
+      + ~KIND~ :: ~:rank~, ~:axis~, or ~:flat~ indicating whether the index is
+        supposed to be a rank, axis, or flat index; or ~:broadcast~ if it is
+        an axis index but wrapping is applied. Initialized with the ~:kind~
+        argument and read by ~index-type-error-kind~."))
+
+(define-condition index-out-of-bounds-error (index-error)
+  ((size :initarg :limit :initform 0 :type (integer 0)
+         :reader index-out-of-bounds-error-size))
+  (:report (lambda (condition stream)
+             (format stream "Index ~a is out of bounds and should be less than ~a."
+                     (index-error-index condition)
+                     (index-out-of-bounds-error-size condition))))
+  (:documentation
+   "Error for when an index is too large to be in the bounds of an /ARRAY/ or
+    /VIEW/.
+
+    ,* Slots
+      + ~SIZE~ :: /(integer 0)/ indicating the maximum size that the index can
+        be. Initialized with the ~:size~ argument and read by
+        ~index-out-of-bounds-error-size~."))
+    #+END_SRC
+
 *** Package Exports
 
     The package exports for view and its related components, which will be in ~package.lisp~ (Section [[package.lisp]]), are
@@ -3207,6 +3286,12 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 #:make-view-full
 #:make-view-zeros
 #:make-view-ones
+#:index-error
+#:index-error-index
+#:index-type-error
+#:index-type-error-kind
+#:index-out-of-bounds-error
+#:index-out-of-bounds-error-size
     #+END_SRC
 
 
@@ -3297,6 +3382,9 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 <<make-view-full>>
 
 <<make-view-zeros-ones>>
+
+
+<<indexing-conditions>>
    #+END_SRC
 
 
