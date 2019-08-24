@@ -230,6 +230,9 @@ $input
    Two, ANSI CL provides only a minimal way to get views of arrays through displaced arrays.
    NumeriCL provides a wrapping type, [[type:view][view]], that keeps type information when the {{{hspec(upgraded-array-element-type)}}} for desired specialized type is not that type, allows arbitrary striding, and also doubles as views.
 
+   We will use the use the type ~varray~ to refer to both arrays and views.
+   Specifically, ~varray~ is ~'(or array view)~.
+
 ** Striding
 
    The [[type:view][view]] type stores and uses the separate stride for each dimension in the array, an offset just like in displaced arrays, and the underlying array or [[type:view][view]] that is storing the array elements.
@@ -1950,6 +1953,14 @@ emacs --batch -l org numericl.org -f org-babel-tangle
     + ~view-strides~ :: Get the strides of the view.
 
     The general equivalents will all start with the prefix "varray".
+    Since all the functions must work on both arrays and views, it is convenient to define the type ~varray~ that will include both.
+
+    #+NAME: varray-definition
+    #+BEGIN_SRC lisp -n
+(deftype varray ()
+  "Convenience type that includes both /array/ and /view/ and nothing else."
+  '(or array view))
+    #+END_SRC
 
     An important choice has to be made with these general equivalents.
     Should they be functions, generics, or macros?
@@ -2234,7 +2245,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
              offset))))
 
 
-(declaim (ftype (function (t) (or view array)) varray-storage))
+(declaim (ftype (function (t) varray) varray-storage))
 (defun varray-storage (arr)
   "Function that returns the /view/ or /array/ that ~ARR~ is displaced with
    respect to.
@@ -2796,8 +2807,8 @@ emacs --batch -l org numericl.org -f org-babel-tangle
   (loop
      (restart-case
          (progn
-           (unless (typep arr-view '(or array view))
-             (error 'type-error :datum arr-view :expected-type '(or array view)))
+           (unless (typep arr-view 'varray)
+             (error 'type-error :datum arr-view :expected-type 'varray))
            ;; If an element type is not given, it is whatever the type of the
            ;; underlying storage is. Otherwise, it is what is passed. The type
            ;; must be looked up to get the number-type-info as well as the
@@ -2830,7 +2841,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
          :report "Use a new arr-view."
          :test (lambda (c) (declare (ignore c)) (not disable-restarts))
          :interactive (lambda ()
-                        (princ "Enter a new arr-view (or array view): ")
+                        (princ "Enter a new arr-view (varray): ")
                         (list (eval (read))))
          (setf arr-view new-arr-view))
        <<make-view-restart-discard-element-type>>
@@ -3245,7 +3256,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 ;;; naref style utility functions to go from indices to row-major indices into
 ;;; the underlying storage.
 
-(declaim (ftype (function ((or view array) list) array-flat-index-integer)
+(declaim (ftype (function (varray list) array-flat-index-integer)
                 %naref-indices-to-underlying-row-major-index-list))
 (defun %naref-indices-to-underlying-row-major-index-list (arr indices)
   "Utility function to go between a /list/ of indices and the row-major index
@@ -3300,7 +3311,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
                       :size (1- (aref dimensions axis))))
               (t (incf row-major-index (* (aref strides axis) index))))))))
 
-(declaim (ftype (function ((or view array) &rest array-index-integer) array-flat-index-integer)
+(declaim (ftype (function (varray &rest array-index-integer) array-flat-index-integer)
                 %naref-indices-to-underlying-row-major-index-args))
 (defun %naref-indices-to-underlying-row-major-index-args (arr &rest indices)
   "Utility function to go between one or more index arguments and the row-major
@@ -3318,7 +3329,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
        equivalent row-major index into the underlying storage."
   (%naref-indices-to-underlying-row-major-index-list arr indices))
 
-(declaim (ftype (function ((or view array) vector) array-flat-index-integer)
+(declaim (ftype (function (varray vector) array-flat-index-integer)
                 %naref-indices-to-underlying-row-major-index-vec))
 (defun %naref-indices-to-underlying-row-major-index-vec (arr indices)
   "Utility function to go between a /vector/ of indices and the row-major index
@@ -3394,6 +3405,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 #:view-dimensions
 #:view-offset
 #:view-strides
+#:varray
 #:varray-contiguous
 #:varray-dimension
 #:varray-dimensions
@@ -3507,6 +3519,8 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 <<determine-contiguity>>
 
 <<view-definition>>
+
+<<varray-definition>>
 
 <<varray-generic-equivalents>>
 
