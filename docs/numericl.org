@@ -3436,6 +3436,9 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 #:index-type-error-kind
 #:index-out-of-bounds-error
 #:index-out-of-bounds-error-size
+#:normal-underlying-row-major-index
+#:normal-underlying-row-major-index-from-list
+#:normal-underlying-row-major-index-from-vec
     #+END_SRC
 
 
