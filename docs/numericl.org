@@ -3252,8 +3252,8 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 ;;; the underlying storage.
 
 (declaim (ftype (function (varray list) array-flat-index-integer)
-                %naref-indices-to-underlying-row-major-index-list))
-(defun %naref-indices-to-underlying-row-major-index-list (arr indices)
+                normal-underlying-row-major-index-from-list))
+(defun normal-underlying-row-major-index-from-list (arr indices)
   "Utility function to go between a /list/ of indices and the row-major index
    into the underlying storage of ~ARR~ without broadcasting.
 
@@ -3307,8 +3307,8 @@ emacs --batch -l org numericl.org -f org-babel-tangle
               (t (incf row-major-index (* (aref strides axis) index))))))))
 
 (declaim (ftype (function (varray &rest array-index-integer) array-flat-index-integer)
-                %naref-indices-to-underlying-row-major-index-args))
-(defun %naref-indices-to-underlying-row-major-index-args (arr &rest indices)
+                normal-underlying-row-major-index))
+(defun normal-underlying-row-major-index (arr &rest indices)
   "Utility function to go between one or more index arguments and the row-major
    index into the underlying storage of ~ARR~ without broadcasting.
 
@@ -3322,11 +3322,11 @@ emacs --batch -l org numericl.org -f org-babel-tangle
    ,* Returns
      + ~UNDER-ROW-MAJOR-INDEX~ :: /array-flat-index-integer/ specifying the
        equivalent row-major index into the underlying storage."
-  (%naref-indices-to-underlying-row-major-index-list arr indices))
+  (normal-underlying-row-major-index-from-list arr indices))
 
 (declaim (ftype (function (varray vector) array-flat-index-integer)
-                %naref-indices-to-underlying-row-major-index-vec))
-(defun %naref-indices-to-underlying-row-major-index-vec (arr indices)
+                normal-underlying-row-major-index-from-vec))
+(defun normal-underlying-row-major-index-from-vec (arr indices)
   "Utility function to go between a /vector/ of indices and the row-major index
    into the underlying storage of ~ARR~ without broadcasting.
 
