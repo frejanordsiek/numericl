@@ -3303,7 +3303,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
               ((>= index (aref dimensions axis))
                (error 'index-out-of-bounds-error
                       :index index
-                      :size (1- (aref dimensions axis))))
+                      :size (aref dimensions axis)))
               (t (incf row-major-index (* (aref strides axis) index))))))))
 
 (declaim (ftype (function (varray &rest array-index-integer) array-flat-index-integer)
@@ -3375,7 +3375,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
               ((>= index (aref dimensions axis))
                (error 'index-out-of-bounds-error
                       :index index
-                      :size (1- (aref dimensions axis))))
+                      :size (aref dimensions axis)))
               (t (incf row-major-index (* (aref strides axis) index))))))))
     #+END_SRC
 
