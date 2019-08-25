@@ -3243,8 +3243,8 @@ emacs --batch -l org numericl.org -f org-babel-tangle
     #+END_SRC
 
     As for the functions to go between indices and row-major indices, it will be useful to have different versions for indices passed as arguments, lists, and vectors.
-    Luckily, we can use the same version for {{{hspec(array)}}} and ~view~.
-    First, the functions for naref.
+    The arguments version is ~normal-underlying-row-major-index~ to be similar to {{{hspec(array-row-major-index)}}}.
+    The other two versions use the suffix "-from-list" and "-from-vec".
 
     #+NAME: naref-indices-to-underlying-row-major
     #+BEGIN_SRC lisp -n
