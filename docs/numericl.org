@@ -3246,7 +3246,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
     The arguments version is ~normal-underlying-row-major-index~ to be similar to {{{hspec(array-row-major-index)}}}.
     The other two versions use the suffix "-from-list" and "-from-vec".
 
-    #+NAME: naref-indices-to-underlying-row-major
+    #+NAME: normal-underlying-row-major-index
     #+BEGIN_SRC lisp -n
 ;;; naref style utility functions to go from indices to row-major indices into
 ;;; the underlying storage.
@@ -3535,7 +3535,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 
 <<indexing-conditions>>
 
-<<naref-indices-to-underlying-row-major>>
+<<normal-underlying-row-major-index>>
    #+END_SRC
 
 
