@@ -3387,6 +3387,111 @@ emacs --batch -l org numericl.org -f org-babel-tangle
               (t (incf row-major-index (* (aref strides axis) index))))))))
     #+END_SRC
 
+    Now we need to go from a row-major index to indices.
+    If we have the CL/C contiguous strides for the varray, then each index is just ~(truncate row-major-index stride)~.
+    We will need two versions for each kind of access, one that returnes the indices as a list and another that returns them as a vector.
+
+    #+NAME: row-major-to-indices
+    #+BEGIN_SRC lisp -n
+;;; Functions to go from row-major indices to indices for each axis.
+
+(declaim (ftype (function (varray array-flat-index-integer) list)
+                normal-row-major-to-indices-as-list))
+(defun normal-row-major-to-indices-as-list (arr row-major-index)
+  "Turns a row-major index into a list of indices for the individual axes.
+
+   Arguments
+   + ~ARR~ :: /array/ or /view/
+   + ~ROW-MAJOR-INDEX~ :: /array-flat-index-integer/ that should be converted.
+
+   Returns
+   + ~INDICES~ :: /list/ of /array-index-integer/ containing the sub-indices for
+     each axis.
+
+   Uncorrectable Errors
+   + /index-type-error/ :: If ~ROW-MAJOR-INDEX~ is the wrong type.
+   + /index-out-of-bounds-error/ :: If ~ROW-MAJOR-INDEX~ is too large for
+     ~ARR~."
+  (cond ((not (typep row-major-index 'array-flat-index-integer))
+         (error 'index-type-error :index row-major-index :kind :flat))
+        ((>= row-major-index (varray-total-size arr))
+         (error 'index-out-of-bounds-error :index row-major-index
+                                           :size (varray-total-size arr)))
+        (t (map 'list #'(lambda (stride) (truncate row-major-index stride))
+                (make-contiguous-strides (varray-dimensions arr) :order :c)))))
+
+(declaim (ftype (function (varray array-flat-index-integer) (simple-array array-index-integer 1))
+                normal-row-major-to-indices-as-vec))
+(defun normal-row-major-to-indices-as-vec (arr row-major-index)
+  "Turns a row-major index into a list of indices for the individual axes.
+
+   Arguments
+   + ~ARR~ :: /array/ or /view/
+   + ~ROW-MAJOR-INDEX~ :: /array-flat-index-integer/ that should be converted.
+
+   Returns
+   + ~INDICES~ :: /(simple-array array-index-integer 1)/ containing the
+     sub-indices for each axis.
+
+   Uncorrectable Errors
+   + /index-type-error/ :: If ~ROW-MAJOR-INDEX~ is the wrong type.
+   + /index-out-of-bounds-error/ :: If ~ROW-MAJOR-INDEX~ is too large for
+     ~ARR~."
+  (cond ((not (typep row-major-index 'array-flat-index-integer))
+         (error 'index-type-error :index row-major-index :kind :flat))
+        ((>= row-major-index (varray-total-size arr))
+         (error 'index-out-of-bounds-error :index row-major-index
+                                           :size (varray-total-size arr)))
+        (t (map '(vector array-index-integer)
+                #'(lambda (stride) (truncate row-major-index stride))
+                (make-contiguous-strides (varray-dimensions arr) :order :c)))))
+
+(declaim (ftype (function (varray integer) list)
+                broadcast-row-major-to-indices-as-list))
+(defun broadcast-row-major-to-indices-as-list (arr row-major-index)
+  "Turns a row-major index into a list of indices for the individual axes with
+   broadcasting.
+
+   Arguments
+   + ~ARR~ :: /array/ or /view/
+   + ~ROW-MAJOR-INDEX~ :: /integer/ that should be converted.
+
+   Returns
+   + ~INDICES~ :: /list/ of /array-index-integer/ containing the sub-indices for
+     each axis.
+
+   Uncorrectable Errors
+   + /index-type-error/ :: If ~ROW-MAJOR-INDEX~ is the wrong type."
+  (if (integerp row-major-index)
+      (let ((row-major-index (mod row-major-index (varray-total-size arr))))
+        (map 'list #'(lambda (stride) (truncate row-major-index stride))
+             (make-contiguous-strides (varray-dimensions arr) :order :c)))
+      (error 'index-type-error :index row-major-index :kind :broadcast)))
+
+(declaim (ftype (function (varray integer) (simple-array array-index-integer 1))
+                broadcast-row-major-to-indices-as-vec))
+(defun broadcast-row-major-to-indices-as-vec (arr row-major-index)
+  "Turns a row-major index into a list of indices for the individual axes with
+   broadcasting.
+
+   Arguments
+   + ~ARR~ :: /array/ or /view/
+   + ~ROW-MAJOR-INDEX~ :: /integer/ that should be converted.
+
+   Returns
+   + ~INDICES~ :: /(simple-array array-index-integer 1)/ containing the
+     sub-indices for each axis.
+
+   Uncorrectable Errors
+   + /index-type-error/ :: If ~ROW-MAJOR-INDEX~ is the wrong type."
+  (if (integerp row-major-index)
+      (let ((row-major-index (mod row-major-index (varray-total-size arr))))
+        (map '(vector array-index-integer)
+             #'(lambda (stride) (truncate row-major-index stride))
+             (make-contiguous-strides (varray-dimensions arr) :order :c)))
+      (error 'index-type-error :index row-major-index :kind :broadcast)))
+    #+END_SRC
+
 *** Package Exports
 
     The package exports for view and its related components, which will be in ~package.lisp~ (Section [[package.lisp]]), are
@@ -3447,6 +3552,10 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 #:normal-underlying-row-major-index
 #:normal-underlying-row-major-index-from-list
 #:normal-underlying-row-major-index-from-vec
+#:normal-row-major-to-indices-as-list
+#:normal-row-major-to-indices-as-vec
+#:broadcast-row-major-to-indices-as-list
+#:broadcast-row-major-to-indices-as-vec
     #+END_SRC
 
 
@@ -3544,6 +3653,8 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 <<indexing-conditions>>
 
 <<normal-underlying-row-major-index>>
+
+<<normal-row-major-to-indices>>
    #+END_SRC
 
 
