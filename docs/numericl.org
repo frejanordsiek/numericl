@@ -3256,14 +3256,14 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 
     #+NAME: normal-underlying-row-major-index
     #+BEGIN_SRC lisp -n
-;;; naref style utility functions to go from indices to row-major indices into
+;;; Normal indexing style functions to go from indices to row-major indices into
 ;;; the underlying storage.
 
 (declaim (ftype (function (varray list) array-flat-index-integer)
                 normal-underlying-row-major-index-from-list))
 (defun normal-underlying-row-major-index-from-list (arr indices)
-  "Utility function to go between a /list/ of indices and the row-major index
-   into the underlying storage of ~ARR~ without broadcasting.
+  "Function to go between a /list/ of indices and the row-major index into the
+   underlying storage of ~ARR~ without broadcasting.
 
    ,* Arguments
      + ~ARR~ :: /array/ or /view/
@@ -3317,8 +3317,8 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 (declaim (ftype (function (varray &rest array-index-integer) array-flat-index-integer)
                 normal-underlying-row-major-index))
 (defun normal-underlying-row-major-index (arr &rest indices)
-  "Utility function to go between one or more index arguments and the row-major
-   index into the underlying storage of ~ARR~ without broadcasting.
+  "Function to go between one or more index arguments and the row-major index
+   into the underlying storage of ~ARR~ without broadcasting.
 
    ,* Arguments
      + ~ARR~ :: /array/ or /view/
@@ -3335,8 +3335,8 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 (declaim (ftype (function (varray vector) array-flat-index-integer)
                 normal-underlying-row-major-index-from-vec))
 (defun normal-underlying-row-major-index-from-vec (arr indices)
-  "Utility function to go between a /vector/ of indices and the row-major index
-   into the underlying storage of ~ARR~ without broadcasting.
+  "Function to go between a /vector/ of indices and the row-major index into
+   the underlying storage of ~ARR~ without broadcasting.
 
    ,* Arguments
      + ~ARR~ :: /array/ or /view/
