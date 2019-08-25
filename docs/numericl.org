@@ -3165,7 +3165,14 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 
 *** Indexing (naref And baref)
 
-    To build ~naref~ and ~baref~, we need some utility functions to go back and forth between indices and row-major indices into the underlying storage.
+    To build ~naref~ and ~baref~, we need some functions to go back and forth between indices and row-major indices into the underlying storage.
+    The overall steps to find the proper row-major index to use in the final underlying array after recursing through all underlying views is
+
+    1. Turn indices into row-major index into the underlying storage.
+    2. If underlying storage is a ~view~, convert the row-major index into indices for that ~view~.
+    3. Repeat step 2 until the underlying storage is an ~array~.
+    4. Access the element of the ultimately underlying ~array~.
+
     We will need some conditions for indexing errors first, though.
 
     #+NAME: indexing-conditions
@@ -3242,9 +3249,10 @@ emacs --batch -l org numericl.org -f org-babel-tangle
         ~index-out-of-bounds-error-size~."))
     #+END_SRC
 
-    As for the functions to go between indices and row-major indices, it will be useful to have different versions for indices passed as arguments, lists, and vectors.
+    As for the functions to go between indices and underlying row-major indices, it will be useful to have different versions for indices passed as arguments, lists, and vectors.
     The arguments version is ~normal-underlying-row-major-index~ to be similar to {{{hspec(array-row-major-index)}}}.
     The other two versions use the suffix "-from-list" and "-from-vec".
+    First, the normal indexing versions.
 
     #+NAME: normal-underlying-row-major-index
     #+BEGIN_SRC lisp -n
