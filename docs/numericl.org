@@ -3226,7 +3226,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
         argument and read by ~index-type-error-kind~."))
 
 (define-condition index-out-of-bounds-error (index-error)
-  ((size :initarg :limit :initform 0 :type (integer 0)
+  ((size :initarg :size :initform 0 :type (integer 0)
          :reader index-out-of-bounds-error-size))
   (:report (lambda (condition stream)
              (format stream "Index ~a is out of bounds and should be less than ~a."
