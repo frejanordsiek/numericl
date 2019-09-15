@@ -3770,7 +3770,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 
 <<broadcast-underlying-row-major-index>>
 
-<<normal-row-major-to-indices>>
+<<row-major-to-indices>>
    #+END_SRC
 
 
