@@ -33,7 +33,7 @@ SOFTWARE.
 #+EMAIL: fnordsie@posteo.net
 #+LANGUAGE: en
 #+DESCRIPTION: NumeriCL's documentation for how to use it, how it works, and its code.
-#+KEYWORDS: NumeriCL numerics array math
+#+KEYWORDS: NumeriCL numerics array math lisp
 
 #+HTML_DOCTYPE: html5
 #+HTML_MATHJAX: path:"MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
