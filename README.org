@@ -91,7 +91,7 @@ Using listings must also be set with a bind.
   + [[https://www.gnu.org/software/emacs][Emacs]] with the following packages:
     + [[https://orgmode.org][Org Mode]]
   + [[https://graphviz.org][Graphviz]]
-  + If doing PDF export, [[https://www.latex-project.org][LaTeX]] with the following packages:
+  + If doing PDF export, [[http://www.luatex.org/][LuaLaTeX]] with the following packages:
     + axessibility
     + amsmath
     + amssymb

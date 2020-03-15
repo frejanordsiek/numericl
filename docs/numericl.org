@@ -41,6 +41,7 @@ SOFTWARE.
 #+OPTIONS: html-preamble:t html-postamble:auto html-html5-fancy
 #+BIND: org-html-coding-system 'utf-8-unix
 
+#+LATEX_COMPILER: lualatex
 #+LATEX_CLASS_OPTIONS: [a4paper]
 #+LATEX_HEADER: \usepackage[utf8]{inputenc}
 #+LATEX_HEADER: \usepackage[a4paper,margin=1.5cm]{geometry}
@@ -68,8 +69,6 @@ Using listings must also be set with a bind.
 
 
 #+LATEX_HEADER: \usepackage{amssymb}
-#+LATEX_HEADER: \DeclareUnicodeCharacter{2713}{\ensuremath{\checkmark}}
-#+LATEX_HEADER: \DeclareUnicodeCharacter{25B3}{\ensuremath{\vartriangle}}
 
 #+LATEX_HEADER: \usepackage{axessibility}
 
@@ -80,6 +79,7 @@ Using listings must also be set with a bind.
 #+MACRO: orgmode [[https://orgmode.org][Org Mode]]
 #+MACRO: graphviz [[https://graphviz.org][Graphviz]]
 #+MACRO: latex [[https://www.latex-project.org][LaTeX]]
+#+MACRO: lualatex [[http://http://www.luatex.org][LuaLaTeX]]
 
 #+MACRO: asdf [[https://common-lisp.net/project/asdf][ASDF]]
 #+MACRO: numpy [[https://www.numpy.org][NumPy]]
@@ -131,7 +131,7 @@ Using listings must also be set with a bind.
   + {{{emacs}}} with the following packages:
     + {{{orgmode}}}
   + {{{graphviz}}}
-  + If doing PDF export, {{{latex}}} with the following packages:
+  + If doing PDF export, {{{lualatex}}} with the following packages:
     + axessibility
     + amsmath
     + amssymb
