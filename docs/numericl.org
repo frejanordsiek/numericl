@@ -37,8 +37,9 @@ SOFTWARE.
 
 #+HTML_DOCTYPE: html5
 #+HTML_MATHJAX: path:"MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+#+HTML_CONTAINER: section
 #+HTML_LINK_HOME: "/"
-#+OPTIONS: html-preamble:t html-postamble:auto html-html5-fancy
+#+OPTIONS: html-preamble:t html-postamble:auto html5-fancy:t
 #+BIND: org-html-coding-system 'utf-8-unix
 
 #+LATEX_COMPILER: lualatex
