@@ -24,9 +24,9 @@ SOFTWARE.
 
 #+STARTUP: inlineimages:t
 #+OPTIONS: tex:t latex:t author:t creator:nil
-#+OPTIONS: H:4 toc:t toc:3 title:t section-numbers:t num:t html-preamble:t f:t email:t
+#+OPTIONS: H:4 toc:t toc:3 title:t section-numbers:t num:t f:t email:t
 
-#+BIND: org-html-coding-system 'utf-8-unix
+#+BIND: org-src-preserve-indentation t
 
 #+AUTHOR: Freja Nordsiek
 #+TITLE: NumeriCL Documentation
@@ -37,6 +37,9 @@ SOFTWARE.
 
 #+HTML_DOCTYPE: html5
 #+HTML_MATHJAX: path:"MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+#+HTML_LINK_HOME: "/"
+#+OPTIONS: html-preamble:t html-postamble:auto html-html5-fancy
+#+BIND: org-html-coding-system 'utf-8-unix
 
 #+LATEX_CLASS_OPTIONS: [a4paper]
 #+LATEX_HEADER: \usepackage[utf8]{inputenc}
