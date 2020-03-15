@@ -71,6 +71,8 @@ Using listings must also be set with a bind.
 #+LATEX_HEADER: \DeclareUnicodeCharacter{2713}{\ensuremath{\checkmark}}
 #+LATEX_HEADER: \DeclareUnicodeCharacter{25B3}{\ensuremath{\vartriangle}}
 
+#+LATEX_HEADER: \usepackage{axessibility}
+
 #+MACRO: color @@latex:\textcolor{$1}{$2}@@@@html:<span style="color: $1">$2<\span>@@
 
 #+MACRO: literate-programming [[https://wikipedia.org/wiki/Literate_programming][Literate Programming]]
@@ -130,6 +132,7 @@ Using listings must also be set with a bind.
     + {{{orgmode}}}
   + {{{graphviz}}}
   + If doing PDF export, {{{latex}}} with the following packages:
+    + axessibility
     + amsmath
     + amssymb
     + capt-of

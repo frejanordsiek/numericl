@@ -92,6 +92,7 @@ Using listings must also be set with a bind.
     + [[https://orgmode.org][Org Mode]]
   + [[https://graphviz.org][Graphviz]]
   + If doing PDF export, [[https://www.latex-project.org][LaTeX]] with the following packages:
+    + axessibility
     + amsmath
     + amssymb
     + capt-of
