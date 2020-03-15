@@ -151,7 +151,7 @@ Using listings must also be set with a bind.
     + wrapfig
     + xcolor
 
-  This library is developed and tesed on the following CL implementations:
+  This library is developed and tested on the following CL implementations:
 
   + {{{sbcl}}}
   + {{{ecl}}}
@@ -237,7 +237,7 @@ $input
    Two, ANSI CL provides only a minimal way to get views of arrays through displaced arrays.
    NumeriCL provides a wrapping type, [[type:view][view]], that keeps type information when the {{{hspec(upgraded-array-element-type)}}} for desired specialized type is not that type, allows arbitrary striding, and also doubles as views.
 
-   We will use the use the type ~varray~ to refer to both arrays and views.
+   We will define the type ~varray~ to refer to both arrays and views.
    Specifically, ~varray~ is ~'(or array view)~.
 
 ** Striding
@@ -253,7 +253,7 @@ $input
    + row, column, page, and/or etc. skips
 
    This goes further than the ~INCX~ and ~LDA~ and co. arguments in {{{blas}}} and {{{lapack}}}.
-   They only allow striding on at most one dimension for an array as no {{{blas}}} function for matrices allows an ~INCX~ and a ~LDA~ for a matrix.
+   They only allow striding on at most one dimension for an array as no {{{blas}}} function for matrices allows both an ~INCX~ and a ~LDA~ for a matrix.
    Here, striding is allowed on all dimensions, much like {{{numpy}}}.
 
 ** Indexing
@@ -288,8 +288,8 @@ $input
 
   NumeriCL is written in {{{literate-programming}}} form/style using {{{emacs}}} {{{orgmode}}}.
   The code and documentation are weaved/combined in this file.
-  The source code can be tangled (the {{{literate-programming}}} for extracting the code) from the documentation by one of two methods.
-  The file can be opened in {{{emacs}}} and then one types the keyboard sequence =C-c C-v t= (where =C= is usually the =Ctrl= key).
+  The source code can be tangled (the {{{literate-programming}}} term for extracting the code) from the documentation by one of two methods.
+  The file can be opened in {{{emacs}}} and then typing the keyboard sequence =C-c C-v t= (where =C= is usually the =Ctrl= key).
   Or the following command can be run on the command line from inside the =docs= subdirectory.
 
   #+BEGIN_SRC bash
@@ -408,7 +408,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
    But, a {{{hspec(check-type)}}} like macro can be made that can at least check it and offer the chance to change it if it is invalid.
    It will check that the argument is a proper list and that all elements are the given type, but allow any length.
    And while we are at it, we can make a similar macro that works for typed proper lists and vectors instead of just lists.
-   The macros expand into an {{{hspec(assert)}}} statement that checks that it is a proper-list or proper-list or vector and then the types of all the elements.
+   The macros expand into an {{{hspec(assert)}}} statement that checks that it is a proper-list, or proper-list or vector, and then the types of all the elements.
    Note that ~nil~ is considered to pass both.
 
    First, we need a condition to represent typed list and vector errors.
@@ -2433,7 +2433,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 
     The constructor also checks the validity of all the arguments individually and together.
     While this could be done with a single {{{hspec(assert)}}}, doing so would be complicated to write and would not be able to tell the caller what is wrong and thefore would make it hard to debug errors.
-    So, instead, the constructor has an infinite loop inside of which is a {{{hspec(restart-case)}}} environment
+    So, instead, the constructor has an infinite loop inside of which is a {{{hspec(restart-case)}}} environment.
     Inside the environment, everything is checked one by one.
     If anything is invalid, an error is generated that indicates what is invalid.
     Then, restarts are provided for changing any of the arguments/parameters and the loop repeats.
@@ -2543,7 +2543,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 
     And we also need a function to validate a combination of /view/ dimensions, strides, and offset.
     We need this as a separate function since it will be needed in more than one of the /view/ constructors.
-    This function can also, in addition to validating, can generate the strides if they weren't given (passed as ~nil~ and then generated assuming CL/C contiguity), rank, total size, the minimum array index, and the maximum array index.
+    This function can also, in addition to validating, generate the strides if they weren't given (passed as ~nil~ and then generated assuming CL/C contiguity), rank, total size, the minimum array index, and the maximum array index.
 
     #+NAME: process-dimensions-strides-offsets
     #+BEGIN_SRC lisp -n
