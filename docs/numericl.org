@@ -41,6 +41,7 @@ SOFTWARE.
 #+HTML_LINK_HOME: "/"
 #+OPTIONS: html-preamble:t html-postamble:auto html5-fancy:t
 #+BIND: org-html-coding-system 'utf-8-unix
+#+BIND: org-html-wrap-src-lines t
 
 #+LATEX_COMPILER: lualatex
 #+LATEX_CLASS_OPTIONS: [a4paper]
