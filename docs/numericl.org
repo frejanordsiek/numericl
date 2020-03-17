@@ -166,7 +166,7 @@ Using listings must also be set with a bind.
   Though care has to be done with complex numbers since {{{hspec(rational)}}} complex numbers get converted to real types if their imaginary part is zero.
   Several aliases are defined for particular subtypes, namely for the standard C integer types and their complex counterparts.
 
-  #+NAME: table:number-types
+  #+NAME: table-number-types
   #+CAPTION: The different real types and their real and complex aliases.
   #+ATTR_HTML: :border 2 :rules all :frame border
   #+ATTR_LATEX: :float t
@@ -204,7 +204,7 @@ Using listings must also be set with a bind.
   Some functions and macros require the desired type to be passed.
   They can also be given the type as a {{{hspec(string)}}} or {{{hspec(keyword)}}}, though obviously they cannot take arguments in this form.
 
-  The type hierarchy is shown in Figure [[fig:number-types-inheritance-tree]].
+  The type hierarchy is shown in Figure [[fig-number-types-inheritance-tree]].
 
   #+NAME: make-number-types-inheritance-tree-dot-file
   #+BEGIN_SRC lisp :results value replace :cache no :exports none
@@ -220,7 +220,7 @@ $input
   #+END_SRC
 
   #+CAPTION: Type hierarchy of all number types used in NumeriCL.
-  #+NAME: fig:number-types-inheritance-tree
+  #+NAME: fig-number-types-inheritance-tree
   #+ATTR_LATEX: :width \textwidth
   #+ATTR_HTML: :width 100% :alt Subtype hierarchy of the various number types used in NumeriCL.
   #+RESULTS: draw-number-types-inheritance-tree
@@ -234,7 +234,7 @@ $input
    NumeriCL uses CL's standard {{{hspec(array)}}} type specialized on subtypes of {{{hspec(number)}}} as arrays, but provides ways to work with them beyond the ANSI standard.
    This means that NumeriCL can easily be used with data from or for other libraries.
    But there are limitations on CL's arrays that require an additional wrapping type.
-   One, the {{{hspec(upgraded-array-element-type)}}} of many of the types in Table [[table:number-types]] on a given implementation may not actually be that particular type and are instead superclasses (and in the worst case, /t/).
+   One, the {{{hspec(upgraded-array-element-type)}}} of many of the types in Table [[table-number-types]] on a given implementation may not actually be that particular type and are instead superclasses (and in the worst case, /t/).
    Two, ANSI CL provides only a minimal way to get views of arrays through displaced arrays.
    NumeriCL provides a wrapping type, [[type:view][view]], that keeps type information when the {{{hspec(upgraded-array-element-type)}}} for desired specialized type is not that type, allows arbitrary striding, and also doubles as views.
 
@@ -912,7 +912,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 
 *** Number Types <<number-types-section>>
 
-    Here, we define all the type/type-aliases in Table [[table:number-types]] that aren't part of the ~common-lisp~ (~cl~) package as is.
+    Here, we define all the type/type-aliases in Table [[table-number-types]] that aren't part of the ~common-lisp~ (~cl~) package as is.
     We start with ~unsigned-integer~ and ~unsigned-fixnum~ (also known as positive fixnums).
 
     #+NAME: unsigned-integer-and-fixnum
