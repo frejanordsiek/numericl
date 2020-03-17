@@ -23,8 +23,8 @@ SOFTWARE.
 #+END_COMMENT
 
 #+STARTUP: inlineimages:t
-#+OPTIONS: tex:t latex:t author:t creator:nil
-#+OPTIONS: H:4 toc:t toc:3 title:t section-numbers:t num:t f:t email:t
+#+OPTIONS: tex:t author:t creator:nil
+#+OPTIONS: H:4 toc:t toc:3 title:t num:t f:t email:t
 
 #+BIND: org-src-preserve-indentation t
 
