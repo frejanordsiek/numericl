@@ -3508,6 +3508,8 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 
     Now we need to go from a row-major index to indices.
     If we have the CL/C contiguous strides for the varray, then each index is just ~(truncate row-major-index stride)~.
+    If the varray is already CL/C contiguous, we can just use its strides.
+    Otherwise, we have to generate CL/C contiguous strides.
     We will need two versions for each kind of access, one that returnes the indices as a list and another that returns them as a vector.
 
     #+NAME: row-major-to-indices
@@ -3537,7 +3539,9 @@ emacs --batch -l org numericl.org -f org-babel-tangle
          (error 'index-out-of-bounds-error :index row-major-index
                                            :size (varray-total-size arr)))
         (t (map 'list #'(lambda (stride) (truncate row-major-index stride))
-                (make-contiguous-strides (varray-dimensions arr) :order :c)))))
+                (if (eql :c (varray-contiguous arr))
+                    (varray-strides arr)
+                    (make-contiguous-strides (varray-dimensions arr) :order :c))))))
 
 (declaim (ftype (function (varray array-flat-index-integer) (simple-array array-index-integer 1))
                 normal-row-major-to-indices-as-vec))
@@ -3563,7 +3567,9 @@ emacs --batch -l org numericl.org -f org-babel-tangle
                                            :size (varray-total-size arr)))
         (t (map '(vector array-index-integer)
                 #'(lambda (stride) (truncate row-major-index stride))
-                (make-contiguous-strides (varray-dimensions arr) :order :c)))))
+                (if (eql :c (varray-contiguous arr))
+                    (varray-strides arr)
+                    (make-contiguous-strides (varray-dimensions arr) :order :c))))))
 
 (declaim (ftype (function (varray integer) list)
                 broadcast-row-major-to-indices-as-list))
@@ -3584,7 +3590,9 @@ emacs --batch -l org numericl.org -f org-babel-tangle
   (if (integerp row-major-index)
       (let ((row-major-index (mod row-major-index (varray-total-size arr))))
         (map 'list #'(lambda (stride) (truncate row-major-index stride))
-             (make-contiguous-strides (varray-dimensions arr) :order :c)))
+             (if (eql :c (varray-contiguous arr))
+                 (varray-strides arr)
+                 (make-contiguous-strides (varray-dimensions arr) :order :c))))
       (error 'index-type-error :index row-major-index :kind :broadcast)))
 
 (declaim (ftype (function (varray integer) (simple-array array-index-integer 1))
