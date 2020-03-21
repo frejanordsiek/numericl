@@ -3615,7 +3615,9 @@ emacs --batch -l org numericl.org -f org-babel-tangle
       (let ((row-major-index (mod row-major-index (varray-total-size arr))))
         (map '(vector array-index-integer)
              #'(lambda (stride) (truncate row-major-index stride))
-             (make-contiguous-strides (varray-dimensions arr) :order :c)))
+             (if (eql :c (varray-contiguous arr))
+                 (varray-strides arr)
+                 (make-contiguous-strides (varray-dimensions arr) :order :c))))
       (error 'index-type-error :index row-major-index :kind :broadcast)))
     #+END_SRC
 
