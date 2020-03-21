@@ -69,6 +69,16 @@ Using listings must also be set with a bind.
 #+LATEX_HEADER: \let\OldLstset\lstset
 #+LATEX_HEADER: \renewcommand{\lstset}[1]{\OldLstset{columns=[c]fixed,basicstyle=\scriptsize\ttfamily,numbers=left,showstringspaces=false,showspaces=false,frame=single,keepspaces=true,numbersep=10pt,numberstyle=\tiny,commentstyle=\color{mygreyblue}\scriptsize\ttfamily\itshape,keywordstyle=\color{mygreen}\scriptsize\ttfamily\bfseries,stringstyle=\color{myred}\scriptsize\ttfamily,identifierstyle=\color{myblue}\scriptsize\ttfamily,#1}}
 
+#+BEGIN_COMMENT
+Vector graphics figures are generated in both SVG and PDF, but due to
+limitations in Org Mode, the link to only one image file can be safely
+included in the file - specifically the SVG file. The exporter to LaTeX/pdf
+notices the SVG file and includes it with \includesvg with the file extension
+dropped. So, we just redefine the command \includesvg to be \includegraphics
+and the PDF file will automatically be used instead.
+#+END_COMMENT
+
+#+LATEX_HEADER: \newcommand*\includesvg{\includegraphics}
 
 #+LATEX_HEADER: \usepackage{amssymb}
 
@@ -207,7 +217,7 @@ Using listings must also be set with a bind.
   The type hierarchy is shown in Figure [[fig-number-types-inheritance-tree]].
 
   #+NAME: make-number-types-inheritance-tree-dot-file
-  #+BEGIN_SRC lisp :results value replace :cache no :exports none
+  #+BEGIN_SRC lisp :results silent :cache no :exports none :no-export
 (let ((*standard-output* (make-broadcast-stream))
       (*error-output* (make-broadcast-stream)))
   (asdf:load-systems :numericl)
@@ -215,7 +225,7 @@ Using listings must also be set with a bind.
   #+END_SRC
 
   #+NAME: draw-number-types-inheritance-tree
-  #+BEGIN_SRC dot :file images/number-types-inheritance-tree.png :exports results :cache no :var input=make-number-types-inheritance-tree-dot-file
+  #+BEGIN_SRC dot :file images/number-types-inheritance-tree.svg :exports results :cache no :var input=make-number-types-inheritance-tree-dot-file :cmdline "-Tpdf -oimages/number-types-inheritance-tree.pdf -Tsvg"
 $input
   #+END_SRC
 
@@ -224,7 +234,7 @@ $input
   #+ATTR_LATEX: :width \textwidth
   #+ATTR_HTML: :width 100% :alt Subtype hierarchy of the various number types used in NumeriCL.
   #+RESULTS: draw-number-types-inheritance-tree
-  [[file:images/number-types-inheritance-tree.png]]
+  [[file:images/number-types-inheritance-tree.svg]]
 
 
 * Arrays
