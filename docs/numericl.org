@@ -175,36 +175,39 @@ and the PDF file will automatically be used instead.
   CL provides the essential types needed for most math along with several math operations on them.
   Though care has to be done with complex numbers since {{{hspec(rational)}}} complex numbers get converted to real types if their imaginary part is zero.
   Several aliases are defined for particular subtypes, namely for the standard C integer types and their complex counterparts.
+  Note that the standard C integer types are extended to 128 bits to support any future 128 bit processors that might arise or 128 bit additions to the C standard.
 
   #+NAME: table-number-types
   #+CAPTION: The different real types and their real and complex aliases.
   #+ATTR_HTML: :border 2 :rules all :frame border
   #+ATTR_LATEX: :float t
-  | Real Type          | Real Alias       | Complex Alias            |
-  |--------------------+------------------+--------------------------|
-  | integer            | cl:integer       | complex-integer          |
-  | unsigned-integer   | unsigned-integer | complex-unsigned-integer |
-  | fixnum             | cl:fixnum        | complex-fixnum           |
-  | unsigned-fixnum    | unsigned-fixnum  | complex-unsigned-fixnum  |
-  | bit                | cl:bit           | complex-bit              |
-  | unsigned-byte      | cl:unsigned-byte | complex-unsigned-byte    |
-  | signed-byte        | cl:signed-byte   | complex-signed-byte      |
-  | (unsigned-byte 8)  | uint8            | complex-uint8            |
-  | (unsigned-byte 16) | uint16           | complex-uint16           |
-  | (unsigned-byte 32) | uint32           | complex-uint32           |
-  | (unsigned-byte 64) | uint64           | complex-uint64           |
-  | (signed-byte 8)    | int8             | complex-int8             |
-  | (signed-byte 16)   | int16            | complex-int16            |
-  | (signed-byte 32)   | int32            | complex-int32            |
-  | (signed-byte 64)   | int64            | complex-int64            |
-  | rational           | cl:rational      | complex-rational         |
-  | float              | cl:float         | complex-float            |
-  | short-float        | cl:short-float   | complex-short-float      |
-  | single-float       | cl:single-float  | complex-single-float     |
-  | double-float       | cl:double-float  | complex-double-float     |
-  | long-float         | cl:long-float    | complex-long-float       |
-  | real               | cl:real          | complex-number           |
-  |                    |                  | cl:number                |
+  | Real Type           | Real Alias       | Complex Alias            |
+  |---------------------+------------------+--------------------------|
+  | integer             | cl:integer       | complex-integer          |
+  | unsigned-integer    | unsigned-integer | complex-unsigned-integer |
+  | fixnum              | cl:fixnum        | complex-fixnum           |
+  | unsigned-fixnum     | unsigned-fixnum  | complex-unsigned-fixnum  |
+  | bit                 | cl:bit           | complex-bit              |
+  | unsigned-byte       | cl:unsigned-byte | complex-unsigned-byte    |
+  | signed-byte         | cl:signed-byte   | complex-signed-byte      |
+  | (unsigned-byte 8)   | uint8            | complex-uint8            |
+  | (unsigned-byte 16)  | uint16           | complex-uint16           |
+  | (unsigned-byte 32)  | uint32           | complex-uint32           |
+  | (unsigned-byte 64)  | uint64           | complex-uint64           |
+  | (unsigned-byte 128) | uint128          | complex-uint128          |
+  | (signed-byte 8)     | int8             | complex-int8             |
+  | (signed-byte 16)    | int16            | complex-int16            |
+  | (signed-byte 32)    | int32            | complex-int32            |
+  | (signed-byte 64)    | int64            | complex-int64            |
+  | (signed-byte 128)   | int128           | complex-int128           |
+  | rational            | cl:rational      | complex-rational         |
+  | float               | cl:float         | complex-float            |
+  | short-float         | cl:short-float   | complex-short-float      |
+  | single-float        | cl:single-float  | complex-single-float     |
+  | double-float        | cl:double-float  | complex-double-float     |
+  | long-float          | cl:long-float    | complex-long-float       |
+  | real                | cl:real          | complex-number           |
+  |                     |                  | cl:number                |
 
   /complex-number/ and {{{hspec(number)}}} are special and their difference has to be spelled out.
   {{{hspec(number)}}} includes all number types.
@@ -983,7 +986,9 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 
     #+NAME: c-and-complex-integer-types-base
     #+BEGIN_SRC lisp -n
-;;; Aliases for standard C integer types.
+;;; Aliases for standard C integer types as well as the logical extension
+;;; to 128 bits that isn't part of the standard at the present time but
+;;; could be in the future.
 
 (deftype uint8 ()
   "Alias for /(unsigned-byte 8)/."
@@ -1001,6 +1006,10 @@ emacs --batch -l org numericl.org -f org-babel-tangle
   "Alias for /(unsigned-byte 64)/."
   `(unsigned-byte 64))
 
+(deftype uint128 ()
+  "Alias for /(unsigned-byte 128)/."
+  `(unsigned-byte 128))
+
 (deftype int8 ()
   "Alias for /(signed-byte 8)/."
   `(signed-byte 8))
@@ -1016,6 +1025,10 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 (deftype int64 ()
   "Alias for /(signed-byte 64)/."
   `(signed-byte 64))
+
+(deftype int128 ()
+  "Alias for /(signed-byte 128)/."
+  `(signed-byte 128))
 
 
 ;;; Complex versions of the standard C integer types.
@@ -1036,6 +1049,10 @@ emacs --batch -l org numericl.org -f org-babel-tangle
   "Complex version of /(unsigned-byte 64)/."
   `(complex-unsigned-byte 64))
 
+(deftype complex-uint128 ()
+  "Complex version of /(unsigned-byte 128)/."
+  `(complex-unsigned-byte 128))
+
 (deftype complex-int8 ()
   "Complex version of /(signed-byte 8)/."
   `(complex-signed-byte 8))
@@ -1051,6 +1068,10 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 (deftype complex-int64 ()
   "Complex version of /(signed-byte 64)/."
   `(complex-signed-byte 64))
+
+(deftype complex-int128 ()
+  "Complex version of /(signed-byte 128)/."
+  `(complex-signed-byte 128))
 
 
 ;;; Complex version of unsigned-integer, fixnum, unsigned-fixnum, bit,
@@ -1324,7 +1345,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
                                                    :real-part-type 'long-float
                                                    :zero 0.0l0 :unity 1.0l0))))
     ;; Make the C fixed width integer types and push them onto real-entries.
-    (dolist (bits '(8 16 32 64))
+    (dolist (bits '(8 16 32 64 128))
       (let ((unsigned-symbol (find-symbol (format nil "UINT~a" bits)))
             (signed-symbol (find-symbol (format nil "INT~a" bits))))
         (push (make-number-type-info :type unsigned-symbol
@@ -1837,10 +1858,12 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 #:uint16
 #:uint32
 #:uint64
+#:uint128
 #:int8
 #:int16
 #:int32
 #:int64
+#:int128
 #:complex-rational
 #:complex-integer
 #:complex-unsigned-byte
@@ -1850,10 +1873,12 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 #:complex-uint16
 #:complex-uint32
 #:complex-uint64
+#:complex-uint128
 #:complex-int8
 #:complex-int16
 #:complex-int32
 #:complex-int64
+#:complex-int128
 #:complex-unsigned-integer
 #:complex-fixnum
 #:complex-unsigned-fixnum
