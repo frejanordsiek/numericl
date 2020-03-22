@@ -3292,7 +3292,14 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 
    ,* Returns
      + ~UNDER-ROW-MAJOR-INDEX~ :: /array-flat-index-integer/ specifying the
-       equivalent row-major index into the underlying storage."
+       equivalent row-major index into the underlying storage.
+
+   ,* Uncorrectable Errors
+     + /type-error/ :: If ~ARR~ is not an /array/ or /view/ or ~INDICES~ is not
+       a /list/.
+     + /index-type-error/ :: If an element of ~INDICES~ is the wrong type.
+     + /index-out-of-bounds-error/ :: If an element of ~INDICES~ is too large
+       for ~ARR~."
   ;; The row-major index will be built axis by axis using the sub-index, the
   ;; dimensions, and the strides. The row-major index can start as the value
   ;; of offset so we don't need to add it later.
@@ -3347,7 +3354,13 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 
    ,* Returns
      + ~UNDER-ROW-MAJOR-INDEX~ :: /array-flat-index-integer/ specifying the
-       equivalent row-major index into the underlying storage."
+       equivalent row-major index into the underlying storage.
+
+   ,* Uncorrectable Errors
+     + /type-error/ :: If ~ARR~ is not an /array/ or /view/.
+     + /index-type-error/ :: If an element of ~INDICES~ is the wrong type.
+     + /index-out-of-bounds-error/ :: If an element of ~INDICES~ is too large
+       for ~ARR~."
   (normal-underlying-row-major-index-from-list arr indices))
 
 (declaim (ftype (function (varray vector) array-flat-index-integer)
@@ -3365,7 +3378,14 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 
    ,* Returns
      + ~UNDER-ROW-MAJOR-INDEX~ :: /array-flat-index-integer/ specifying the
-       equivalent row-major index into the underlying storage."
+       equivalent row-major index into the underlying storage.
+
+   ,* Uncorrectable Errors
+     + /type-error/ :: If ~ARR~ is not an /array/ or /view/ or ~INDICES~ is not
+       a /vector/.
+     + /index-type-error/ :: If an element of ~INDICES~ is the wrong type.
+     + /index-out-of-bounds-error/ :: If an element of ~INDICES~ is too large
+       for ~ARR~."
   ;; The row-major index will be built axis by axis using the sub-index, the
   ;; dimensions, and the strides. The row-major index can start as the value
   ;; of offset so we don't need to add it later.
@@ -3425,7 +3445,12 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 
    ,* Returns
      + ~UNDER-ROW-MAJOR-INDEX~ :: /array-flat-index-integer/ specifying the
-       equivalent row-major index into the underlying storage."
+       equivalent row-major index into the underlying storage.
+
+   ,* Uncorrectable Errors
+     + /type-error/ :: If ~ARR~ is not an /array/ or /view/ or ~INDICES~ is not
+       a /list/.
+     + /index-type-error/ :: If an element of ~INDICES~ is the wrong type."
   ;; The row-major index will be built axis by axis using the sub-index, the
   ;; dimensions, and the strides. The row-major index can start as the value
   ;; of offset so we don't need to add it later.
@@ -3469,7 +3494,11 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 
    ,* Returns
      + ~UNDER-ROW-MAJOR-INDEX~ :: /array-flat-index-integer/ specifying the
-       equivalent row-major index into the underlying storage."
+       equivalent row-major index into the underlying storage.
+
+   ,* Uncorrectable Errors
+     + /type-error/ :: If ~ARR~ is not an /array/ or /view/.
+     + /index-type-error/ :: If an element of ~INDICES~ is the wrong type."
   (broadcast-underlying-row-major-index-from-list arr indices))
 
 (declaim (ftype (function (varray vector) array-flat-index-integer)
@@ -3485,7 +3514,12 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 
    ,* Returns
      + ~UNDER-ROW-MAJOR-INDEX~ :: /array-flat-index-integer/ specifying the
-       equivalent row-major index into the underlying storage."
+       equivalent row-major index into the underlying storage.
+
+   ,* Uncorrectable Errors
+     + /type-error/ :: If ~ARR~ is not an /array/ or /view/ or ~INDICES~ is not
+       a /vector/.
+     + /index-type-error/ :: If an element of ~INDICES~ is the wrong type."
   ;; The row-major index will be built axis by axis using the sub-index, the
   ;; dimensions, and the strides. The row-major index can start as the value
   ;; of offset so we don't need to add it later.
