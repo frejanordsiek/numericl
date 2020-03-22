@@ -1236,14 +1236,8 @@ emacs --batch -l org numericl.org -f org-babel-tangle
       ;; Lookup into the alist.
       (let ((entry (assoc (list (float-radix (nth 1 float-type))
                                 (float-digits (nth 1 float-type))
-                                (multiple-value-bind (sig exp sign)
-                                    (decode-float (nth 1 float-type))
-                                  (declare (ignore sig sign))
-                                  exp)
-                                (multiple-value-bind (sig exp sign)
-                                    (decode-float (nth 2 float-type))
-                                  (declare (ignore sig sign))
-                                  exp))
+                                (nth-value 1 (decode-float (nth 1 float-type)))
+                                (nth-value 1 (decode-float (nth 2 float-type))))
                           ieee-types
                           :test #'equal)))
         (when entry
