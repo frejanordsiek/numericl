@@ -3574,6 +3574,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
        for each axis.
 
    ,* Uncorrectable Errors
+     + /type-error/ :: If ~ARR~ is not an /array/ or /view/.
      + /index-type-error/ :: If ~ROW-MAJOR-INDEX~ is the wrong type.
      + /index-out-of-bounds-error/ :: If ~ROW-MAJOR-INDEX~ is too large for
        ~ARR~."
@@ -3601,6 +3602,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
        sub-indices for each axis.
 
    ,* Uncorrectable Errors
+     + /type-error/ :: If ~ARR~ is not an /array/ or /view/.
      + /index-type-error/ :: If ~ROW-MAJOR-INDEX~ is the wrong type.
      + /index-out-of-bounds-error/ :: If ~ROW-MAJOR-INDEX~ is too large for
        ~ARR~."
@@ -3630,6 +3632,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
        for each axis.
 
    ,* Uncorrectable Errors
+     + /type-error/ :: If ~ARR~ is not an /array/ or /view/.
      + /index-type-error/ :: If ~ROW-MAJOR-INDEX~ is the wrong type."
   (if (integerp row-major-index)
       (let ((row-major-index (mod row-major-index (varray-total-size arr))))
@@ -3654,6 +3657,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
        sub-indices for each axis.
 
    ,* Uncorrectable Errors
+     + /type-error/ :: If ~ARR~ is not an /array/ or /view/.
      + /index-type-error/ :: If ~ROW-MAJOR-INDEX~ is the wrong type."
   (if (integerp row-major-index)
       (let ((row-major-index (mod row-major-index (varray-total-size arr))))
