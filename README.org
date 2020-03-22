@@ -118,7 +118,7 @@ Using listings must also be set with a bind.
   The file can be opened in [[https://www.gnu.org/software/emacs][Emacs]] and then one types the keyboard sequence =C-c C-v t= (where =C= is usually the =Ctrl= key).
   Or the following command can be run on the command line from inside the =docs= subdirectory.
 
-  #+BEGIN_SRC bash
+  #+BEGIN_SRC shell
 emacs --batch -l org numericl.org -f org-babel-tangle
   #+END_SRC
 
