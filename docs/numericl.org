@@ -174,40 +174,57 @@ and the PDF file will automatically be used instead.
   We use CL's builtin {{{hspec(number)}}} type and its subtypes as the basis for numbers.
   CL provides the essential types needed for most math along with several math operations on them.
   Though care has to be done with complex numbers since {{{hspec(rational)}}} complex numbers get converted to real types if their imaginary part is zero.
-  Several aliases are defined for particular subtypes, namely for the standard C integer types and their complex counterparts.
-  Note that the standard C integer types are extended to 128 bits to support any future 128 bit processors that might arise or 128 bit additions to the C standard.
+  Several aliases are defined for particular subtypes:
+
+  + The standard C integer types and their complex counterparts.
+    Note that the standard C integer types are extended to 128 bits to support any future 128 bit processors that might arise or 128 bit additions to the C standard.
+  + IEEE 754 floating point types if the implementation implements them.
+    + float16 (half precision)
+    + float32 (single precision)
+    + float64 (double precision)
+    + float128 (quadruple precision)
+    + float256 (octuple precision)
 
   #+NAME: table-number-types
   #+CAPTION: The different real types and their real and complex aliases.
   #+ATTR_HTML: :border 2 :rules all :frame border
   #+ATTR_LATEX: :float t
-  | Real Type           | Real Alias       | Complex Alias            |
-  |---------------------+------------------+--------------------------|
-  | integer             | cl:integer       | complex-integer          |
-  | unsigned-integer    | unsigned-integer | complex-unsigned-integer |
-  | fixnum              | cl:fixnum        | complex-fixnum           |
-  | unsigned-fixnum     | unsigned-fixnum  | complex-unsigned-fixnum  |
-  | bit                 | cl:bit           | complex-bit              |
-  | unsigned-byte       | cl:unsigned-byte | complex-unsigned-byte    |
-  | signed-byte         | cl:signed-byte   | complex-signed-byte      |
-  | (unsigned-byte 8)   | uint8            | complex-uint8            |
-  | (unsigned-byte 16)  | uint16           | complex-uint16           |
-  | (unsigned-byte 32)  | uint32           | complex-uint32           |
-  | (unsigned-byte 64)  | uint64           | complex-uint64           |
-  | (unsigned-byte 128) | uint128          | complex-uint128          |
-  | (signed-byte 8)     | int8             | complex-int8             |
-  | (signed-byte 16)    | int16            | complex-int16            |
-  | (signed-byte 32)    | int32            | complex-int32            |
-  | (signed-byte 64)    | int64            | complex-int64            |
-  | (signed-byte 128)   | int128           | complex-int128           |
-  | rational            | cl:rational      | complex-rational         |
-  | float               | cl:float         | complex-float            |
-  | short-float         | cl:short-float   | complex-short-float      |
-  | single-float        | cl:single-float  | complex-single-float     |
-  | double-float        | cl:double-float  | complex-double-float     |
-  | long-float          | cl:long-float    | complex-long-float       |
-  | real                | cl:real          | complex-number           |
-  |                     |                  | cl:number                |
+  | Real Type                             | Real Alias                            | Complex Alias                                 |
+  |---------------------------------------+---------------------------------------+-----------------------------------------------|
+  | integer                               | cl:integer                            | complex-integer                               |
+  | unsigned-integer                      | unsigned-integer                      | complex-unsigned-integer                      |
+  | fixnum                                | cl:fixnum                             | complex-fixnum                                |
+  | unsigned-fixnum                       | unsigned-fixnum                       | complex-unsigned-fixnum                       |
+  | bit                                   | cl:bit                                | complex-bit                                   |
+  | unsigned-byte                         | cl:unsigned-byte                      | complex-unsigned-byte                         |
+  | signed-byte                           | cl:signed-byte                        | complex-signed-byte                           |
+  | (unsigned-byte 8)                     | uint8                                 | complex-uint8                                 |
+  | (unsigned-byte 16)                    | uint16                                | complex-uint16                                |
+  | (unsigned-byte 32)                    | uint32                                | complex-uint32                                |
+  | (unsigned-byte 64)                    | uint64                                | complex-uint64                                |
+  | (unsigned-byte 128)                   | uint128                               | complex-uint128                               |
+  | (signed-byte 8)                       | int8                                  | complex-int8                                  |
+  | (signed-byte 16)                      | int16                                 | complex-int16                                 |
+  | (signed-byte 32)                      | int32                                 | complex-int32                                 |
+  | (signed-byte 64)                      | int64                                 | complex-int64                                 |
+  | (signed-byte 128)                     | int128                                | complex-int128                                |
+  | rational                              | cl:rational                           | complex-rational                              |
+  | float                                 | cl:float                              | complex-float                                 |
+  | short-float                           | cl:short-float                        | complex-short-float                           |
+  | single-float                          | cl:single-float                       | complex-single-float                          |
+  | double-float                          | cl:double-float                       | complex-double-float                          |
+  | long-float                            | cl:long-float                         | complex-long-float                            |
+  | ieee-float16 [fn:ieee-float-present]  | ieee-float16 [fn:ieee-float-present]  | complex-ieee-float16 [fn:ieee-float-present]  |
+  | ieee-float32 [fn:ieee-float-present]  | ieee-float32 [fn:ieee-float-present]  | complex-ieee-float32 [fn:ieee-float-present]  |
+  | ieee-float64 [fn:ieee-float-present]  | ieee-float64 [fn:ieee-float-present]  | complex-ieee-float64 [fn:ieee-float-present]  |
+  | ieee-float128 [fn:ieee-float-present] | ieee-float128 [fn:ieee-float-present] | complex-ieee-float128 [fn:ieee-float-present] |
+  | ieee-float256 [fn:ieee-float-present] | ieee-float256 [fn:ieee-float-present] | complex-ieee-float256 [fn:ieee-float-present] |
+  | real                                  | cl:real                               | complex-number                                |
+  |                                       |                                       | cl:number                                     |
+
+
+[fn:ieee-float-present] If the corresponding IEEE 754 floating point type is present in the CL implementation.
+
 
   /complex-number/ and {{{hspec(number)}}} are special and their difference has to be spelled out.
   {{{hspec(number)}}} includes all number types.
@@ -1151,6 +1168,253 @@ emacs --batch -l org numericl.org -f org-babel-tangle
   `(complex (long-float ,lower-limit ,upper-limit)))
     #+END_SRC
 
+    IEEE 754 floating point types are used by many implementations.
+    But; {{{hspec(short-float)}}}, {{{hspec(single-float)}}}, {{{hspec(double-float)}}}, and {{{hspec(long-float)}}} aren't required to follow IEEE 784, let alone map to float16, float32, float64, and float128 respectively.
+    This means we {{{hspec(*features*)}}} for ~:ieee-floating-point~ and check if the have to check each floating point type one by one to see if they match the following parameters obtained from [[https://en.wikipedia.org/wiki/IEEE_754]].
+    Note that the number of bits in the exponents is increased by one here to reflect that the significand returned by {{{hspec(decode-float)}}} is between 0 and 1 instead of 1 and 2.
+
+    #+NAME: table-ieee-float-matching
+    #+CAPTION: The radix, number of digits
+    #+ATTR_HTML: :border 2 :rules all :frame border
+    #+ATTR_LATEX: :float t
+    | Type     | Radix | Number of Digits | Most Positive Exponent | Least Positive Normalized Exponent |
+    |----------+-------+------------------+------------------------+------------------------------------|
+    | float16  |     2 |               11 |                     15 |                                -14 |
+    | float32  |     2 |               24 |                    127 |                               -126 |
+    | float64  |     2 |               53 |                   1023 |                              -1022 |
+    | float128 |     2 |              113 |                  16383 |                             -16382 |
+    | float256 |     2 |              237 |                 262143 |                            -262142 |
+
+    This will be done using {{{hspec(float-radix)}}}, {{{hspec(float-digits)}}}, and {{{hspec(decode-float)}}}.
+
+    First, we define entries in {{{hspec(*features*)}}} (during compilation, loading, and executing) for each match between CL and IEEE 754 floating point types.
+    Besides being useful in their own right in other places in the code and for users, we need them in order to do {{{hspec(deftype)}}} for the IEEE 754 floating point types if they are present.
+    If a particular IEEE 754 floating point type has a match at all, ~:numericl-has-ieee-floatXX~ will be added to {{{hspec(*features*)}}} where XX is the number of bits.
+    If ~ieee-floatXX~ and ~YYYY-float~ (where YYYY is ~short~, ~single~, ~double~, or ~long~), then ~:numericl-ieee-floatXX-is-YYYY-float~ and ~:numericl-YYYY-float-is-ieee-floatXX~ are added to {{{hspec(*features*)}}}.
+
+    #+NAME: checking-for-ieee-float-types
+    #+BEGIN_SRC lisp -n
+;;; Check if any of the built in floating point types are the standard IEE 754
+;;; types, and define the appropriate features which are of the form
+;;;
+;;; :numericl-ieee-floatXX-is-YYYY-float
+;;;
+;;; and
+;;;
+;;; :numericl-YYYY-float-is-ieee-floatXX
+;;;
+;;; :numericl-has-ieee-floatXX
+;;;
+;;; where XX is the number of bits and YYYY is short, single, double, or long.
+;;;
+;;; This is done by going through each builtin floating point type and looking
+;;; up the radix, digits, exponent of the most positive finite value, and the
+;;; exponent of the least positive normalized value in a table.
+;;;
+;;; Values in the table gotten from https://en.wikipedia.org/wiki/IEEE_754 with
+;;; the number of bits in the exponents increased by one to reflect that the
+;;; significand returned by decode-float is between 0 and 1 instead of 1 and 2.
+
+(eval-when #+ieee-floating-point (:compile-toplevel :load-toplevel :execute) #-ieee-floating-point ()
+  (let ((ieee-types '(((2 11 16 -13) . "ieee-float16")
+                      ((2 24 128 -125) . "ieee-float32")
+                      ((2 53 1024 -1021) . "ieee-float64")
+                      ((2 113 16384 -16381) . "ieee-float128")
+                      ((2 237 262144 -262141) . "ieee-float256"))))
+    (dolist (float-type (list (list "short-float"
+                                    most-positive-short-float
+                                    least-positive-normalized-short-float)
+                              (list "single-float"
+                                    most-positive-single-float
+                                    least-positive-normalized-single-float)
+                              (list "double-float"
+                                    most-positive-double-float
+                                    least-positive-normalized-double-float)
+                              (list "long-float"
+                                    most-positive-long-float
+                                    least-positive-normalized-long-float)))
+      ;; Lookup into the alist.
+      (let ((entry (assoc (list (float-radix (nth 1 float-type))
+                                (float-digits (nth 1 float-type))
+                                (multiple-value-bind (sig exp sign)
+                                    (decode-float (nth 1 float-type))
+                                  (declare (ignore sig sign))
+                                  exp)
+                                (multiple-value-bind (sig exp sign)
+                                    (decode-float (nth 2 float-type))
+                                  (declare (ignore sig sign))
+                                  exp))
+                          ieee-types
+                          :test #'equal)))
+        (when entry
+          (dolist (sym-str (list (concatenate 'string "numericl-has-" (cdr entry))
+                                 (concatenate 'string "numericl-" (cdr entry)
+                                              "-is-" (first float-type))
+                                 (concatenate 'string "numericl-" (first float-type)
+                                              "-is-" (cdr entry))))
+            (let ((sym (intern (string-upcase sym-str) "KEYWORD")))
+              (unless (member sym *features*)
+                (push sym *features*)))))))))
+    #+END_SRC
+
+    Now that the appropriate entries are added into {{{hspec(*features*)}}}, the types themselves can be defined.
+
+    #+NAME: defining-ieee-float-types
+    #+BEGIN_SRC lisp -n
+;;; Define IEEE 754 floating point type aliases (and their complex version) if
+;;; available.
+
+(eval-when #+numericl-has-ieee-float16 (:compile-toplevel)
+           #-numericl-has-ieee-float16 ()
+  (deftype ieee-float16 (&optional lower-limit upper-limit)
+    "IEEE 754 float16 floating point type alias.
+
+     ,* Arguments
+       + ~LOWER-LIMIT~ :: /ieee-float16/ specifying the lower limit.
+       + ~UPPER-LIMIT~ :: /ieee-float16/ specifying the upper limit."
+    `(#+numericl-ieee-float16-is-short-float
+      short-float
+      ,#+(and (not numericl-ieee-float16-is-short-float)
+             numericl-ieee-float16-is-single-float)
+      single-float
+      ,#+(and (not numericl-ieee-float16-is-short-float)
+             (not numericl-ieee-float16-is-single-float)
+             numericl-ieee-float16-is-double-float)
+      double-float
+      #-(or numericl-ieee-float16-is-short-float
+            numericl-ieee-float16-is-single-float
+            numericl-ieee-float16-is-double-float)
+      long-float
+      ,lower-limit ,upper-limit))
+  (deftype complex-ieee-float16 (&optional lower-limit upper-limit)
+    "Complex version of /(ieee-float16 lower-limit upper-limit)/
+
+     ,* Arguments
+       + ~LOWER-LIMIT~ :: /ieee-float16/ specifying the lower limit.
+       + ~UPPER-LIMIT~ :: /ieee-float16/ specifying the upper limit."
+    `(complex (ieee-float16 ,lower-limit ,upper-limit))))
+
+(eval-when #+numericl-has-ieee-float32 (:compile-toplevel)
+           #-numericl-has-ieee-float32 ()
+  (deftype ieee-float32 (&optional lower-limit upper-limit)
+    "IEEE 754 float32 floating point type alias.
+
+     ,* Arguments
+       + ~LOWER-LIMIT~ :: /ieee-float32/ specifying the lower limit.
+       + ~UPPER-LIMIT~ :: /ieee-float32/ specifying the upper limit."
+    `(#+numericl-ieee-float32-is-short-float
+      short-float
+      ,#+(and (not numericl-ieee-float32-is-short-float)
+             numericl-ieee-float32-is-single-float)
+      single-float
+      ,#+(and (not numericl-ieee-float32-is-short-float)
+             (not numericl-ieee-float32-is-single-float)
+             numericl-ieee-float32-is-double-float)
+      double-float
+      #-(or numericl-ieee-float32-is-short-float
+            numericl-ieee-float32-is-single-float
+            numericl-ieee-float32-is-double-float)
+      long-float
+      ,lower-limit ,upper-limit))
+  (deftype complex-ieee-float32 (&optional lower-limit upper-limit)
+    "Complex version of /(ieee-float32 lower-limit upper-limit)/
+
+     ,* Arguments
+       + ~LOWER-LIMIT~ :: /ieee-float32/ specifying the lower limit.
+       + ~UPPER-LIMIT~ :: /ieee-float32/ specifying the upper limit."
+    `(complex (ieee-float32 ,lower-limit ,upper-limit))))
+
+(eval-when #+numericl-has-ieee-float64 (:compile-toplevel)
+           #-numericl-has-ieee-float64 ()
+  (deftype ieee-float64 (&optional lower-limit upper-limit)
+    "IEEE 754 float64 floating point type alias.
+
+     ,* Arguments
+       + ~LOWER-LIMIT~ :: /ieee-float64/ specifying the lower limit.
+       + ~UPPER-LIMIT~ :: /ieee-float64/ specifying the upper limit."
+    `(#+numericl-ieee-float64-is-short-float
+      short-float
+      ,#+(and (not numericl-ieee-float64-is-short-float)
+             numericl-ieee-float64-is-single-float)
+      single-float
+      ,#+(and (not numericl-ieee-float64-is-short-float)
+             (not numericl-ieee-float64-is-single-float)
+             numericl-ieee-float64-is-double-float)
+      double-float
+      #-(or numericl-ieee-float64-is-short-float
+            numericl-ieee-float64-is-single-float
+            numericl-ieee-float64-is-double-float)
+      long-float
+      ,lower-limit ,upper-limit))
+  (deftype complex-ieee-float64 (&optional lower-limit upper-limit)
+    "Complex version of /(ieee-float64 lower-limit upper-limit)/
+
+     ,* Arguments
+       + ~LOWER-LIMIT~ :: /ieee-float64/ specifying the lower limit.
+       + ~UPPER-LIMIT~ :: /ieee-float64/ specifying the upper limit."
+    `(complex (ieee-float16 ,lower-limit ,upper-limit))))
+
+(eval-when #+numericl-has-ieee-float128 (:compile-toplevel)
+           #-numericl-has-ieee-float128 ()
+  (deftype ieee-float128 (&optional lower-limit upper-limit)
+    "IEEE 754 float128 floating point type alias.
+
+     ,* Arguments
+       + ~LOWER-LIMIT~ :: /ieee-float128/ specifying the lower limit.
+       + ~UPPER-LIMIT~ :: /ieee-float128/ specifying the upper limit."
+    `(#+numericl-ieee-float128-is-short-float
+      short-float
+      ,#+(and (not numericl-ieee-float128-is-short-float)
+             numericl-ieee-float128-is-single-float)
+      single-float
+      ,#+(and (not numericl-ieee-float128-is-short-float)
+             (not numericl-ieee-float128-is-single-float)
+             numericl-ieee-float128-is-double-float)
+      double-float
+      #-(or numericl-ieee-float128-is-short-float
+            numericl-ieee-float128-is-single-float
+            numericl-ieee-float128-is-double-float)
+      long-float
+      ,lower-limit ,upper-limit))
+  (deftype complex-ieee-float128 (&optional lower-limit upper-limit)
+    "Complex version of /(ieee-float128 lower-limit upper-limit)/
+
+     ,* Arguments
+       + ~LOWER-LIMIT~ :: /ieee-float128/ specifying the lower limit.
+       + ~UPPER-LIMIT~ :: /ieee-float128/ specifying the upper limit."
+    `(complex (ieee-float128 ,lower-limit ,upper-limit))))
+
+(eval-when #+numericl-has-ieee-float256 (:compile-toplevel)
+           #-numericl-has-ieee-float256 ()
+  (deftype ieee-float256 (&optional lower-limit upper-limit)
+    "IEEE 754 float256 floating point type alias.
+
+     ,* Arguments
+       + ~LOWER-LIMIT~ :: /ieee-float256/ specifying the lower limit.
+       + ~UPPER-LIMIT~ :: /ieee-float256/ specifying the upper limit."
+    `(#+numericl-ieee-float256-is-short-float
+      short-float
+      ,#+(and (not numericl-ieee-float256-is-short-float)
+             numericl-ieee-float256-is-single-float)
+      single-float
+      ,#+(and (not numericl-ieee-float256-is-short-float)
+             (not numericl-ieee-float256-is-single-float)
+             numericl-ieee-float256-is-double-float)
+      double-float
+      #-(or numericl-ieee-float256-is-short-float
+            numericl-ieee-float256-is-single-float
+            numericl-ieee-float256-is-double-float)
+      long-float
+      ,lower-limit ,upper-limit))
+  (deftype complex-ieee-float256 (&optional lower-limit upper-limit)
+    "Complex version of /(ieee-float256 lower-limit upper-limit)/
+
+     ,* Arguments
+       + ~LOWER-LIMIT~ :: /ieee-float256/ specifying the lower limit.
+       + ~UPPER-LIMIT~ :: /ieee-float256/ specifying the upper limit."
+    `(complex (ieee-float256 ,lower-limit ,upper-limit))))
+    #+END_SRC
+
 *** Number Type Information
 
     It is very important to answer the following questions about a type specifier:
@@ -1343,7 +1607,32 @@ emacs --batch -l org numericl.org -f org-babel-tangle
                                                    :zero 0.0d0 :unity 1.0d0)
                             (make-number-type-info :type 'long-float
                                                    :real-part-type 'long-float
-                                                   :zero 0.0l0 :unity 1.0l0))))
+                                                   :zero 0.0l0 :unity 1.0l0)
+                            ,#+numericl-has-ieee-float16
+                            (make-number-type-info :type 'ieee-float16
+                                                   :real-part-type 'ieee-float16
+                                                   :zero (coerce 0.0e0 'ieee-float16)
+                                                   :unity (coerce 1.0e0 'ieee-float16))
+                            ,#+numericl-has-ieee-float32
+                            (make-number-type-info :type 'ieee-float32
+                                                   :real-part-type 'ieee-float32
+                                                   :zero (coerce 0.0e0 'ieee-float32)
+                                                   :unity (coerce 1.0e0 'ieee-float32))
+                            ,#+numericl-has-ieee-float64
+                            (make-number-type-info :type 'ieee-float64
+                                                   :real-part-type 'ieee-float64
+                                                   :zero (coerce 0.0e0 'ieee-float64)
+                                                   :unity (coerce 1.0e0 'ieee-float64))
+                            ,#+numericl-has-ieee-float128
+                            (make-number-type-info :type 'ieee-float128
+                                                   :real-part-type 'ieee-float128
+                                                   :zero (coerce 0.0e0 'ieee-float128)
+                                                   :unity (coerce 1.0e0 'ieee-float128))
+                            ,#+numericl-has-ieee-float256
+                            (make-number-type-info :type 'ieee-float256
+                                                   :real-part-type 'ieee-float256
+                                                   :zero (coerce 0.0e0 'ieee-float256)
+                                                   :unity (coerce 1.0e0 'ieee-float256)))))
     ;; Make the C fixed width integer types and push them onto real-entries.
     (dolist (bits '(8 16 32 64 128))
       (let ((unsigned-symbol (find-symbol (format nil "UINT~a" bits)))
@@ -1378,7 +1667,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
                                    :unity (complex (number-type-info-unity rel)
                                                    (number-type-info-zero rel)))
             entries))
-    ;; Put everything into the hash table three times with the following keys:
+    ;; Put everything into the hash table multiple times with the following keys:
     ;;
     ;; 1. the symbol for the type
     ;; 2. the string version of their symbol name without package prefix
@@ -1387,7 +1676,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
     ;; 5. the (unsigned-integer upper-bound) if it can be described in that form
     ;; 6. the (signed-byte bits) if it can be described in that form
     ;; 7. the (unsigned-byte bits) if it can be described in that form
-    (dolist (el entries table)
+    (dolist (el entries)
       (let* ((sym-key (number-type-info-type el))
              (str-key (string-downcase (symbol-name sym-key)))
              (kwd-key (intern (string-upcase str-key) "KEYWORD")))
@@ -1415,7 +1704,8 @@ emacs --batch -l org numericl.org -f org-babel-tangle
               ;; two). The integer length is then the number of bits.
               (when (= (integer-length upper-bound) (logcount upper-bound))
                 (setf (gethash (list (if complex 'complex-unsigned-byte 'unsigned-byte)
-                                     (integer-length upper-bound)) table) el))))))))
+                                     (integer-length upper-bound)) table) el)))))))
+    table)
   "/hash-table/ of numerical type information for the numerical types used in
    this library. The keys are the type /symbols/, /keyword/ names of the types,
    /string/ names of the types, and /list/ /typespec/ for /integer/ types with
@@ -1888,6 +2178,16 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 #:complex-single-float
 #:complex-double-float
 #:complex-long-float
+#+numericl-has-ieee-float16 :ieee-float16
+#+numericl-has-ieee-float32 :ieee-float32
+#+numericl-has-ieee-float64 :ieee-float64
+#+numericl-has-ieee-float128 :ieee-float128
+#+numericl-has-ieee-float256 :ieee-float256
+#+numericl-has-ieee-float16 :complex-ieee-float16
+#+numericl-has-ieee-float32 :complex-ieee-float32
+#+numericl-has-ieee-float64 :complex-ieee-float64
+#+numericl-has-ieee-float128 :complex-ieee-float128
+#+numericl-has-ieee-float256 :complex-ieee-float256
 #:get-upgraded-array-element-type
 #:number-type-info
 #:number-type-info-type
@@ -3955,6 +4255,10 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 <<c-and-complex-integer-types-base>>
 
 <<complex-float-types-base>>
+
+<<checking-for-ieee-float-types>>
+
+<<defining-ieee-float-types>>
 
 
 <<get-upgraded-array-element-type>>
