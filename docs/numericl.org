@@ -232,7 +232,7 @@ and the PDF file will automatically be used instead.
   In a sense, /complex-number/ is strictly complex.
 
   Some functions and macros require the desired type to be passed.
-  They can also be given the type as a {{{hspec(string)}}} or {{{hspec(keyword)}}}, though obviously they cannot take arguments in this form.
+  They can also be given the type as a {{{hspec(string)}}} (either all lower-case or all upper-case) or {{{hspec(keyword)}}}, though obviously they cannot take arguments in this form.
 
   The type hierarchy is shown in Figure [[fig-number-types-inheritance-tree]].
 
@@ -1670,18 +1670,22 @@ emacs --batch -l org numericl.org -f org-babel-tangle
     ;; Put everything into the hash table multiple times with the following keys:
     ;;
     ;; 1. the symbol for the type
-    ;; 2. the string version of their symbol name without package prefix
-    ;; 3. the keyword version of their symbol name
-    ;; 4. the (integer lower-bound upper-bound) if it can be described in that form
-    ;; 5. the (unsigned-integer upper-bound) if it can be described in that form
-    ;; 6. the (signed-byte bits) if it can be described in that form
-    ;; 7. the (unsigned-byte bits) if it can be described in that form
+    ;; 2. the lower-case string version of their symbol name without package
+    ;;    prefix
+    ;; 3. the upper-case string version of their symbol name without package
+    ;;    prefix
+    ;; 4. the keyword version of their symbol name
+    ;; 5. the (integer lower-bound upper-bound) if it can be described in that form
+    ;; 6. the (unsigned-integer upper-bound) if it can be described in that form
+    ;; 7. the (signed-byte bits) if it can be described in that form
+    ;; 8. the (unsigned-byte bits) if it can be described in that form
     (dolist (el entries)
       (let* ((sym-key (number-type-info-type el))
              (str-key (string-downcase (symbol-name sym-key)))
              (kwd-key (intern (string-upcase str-key) "KEYWORD")))
         (setf (gethash sym-key table) el)
         (setf (gethash str-key table) el)
+        (setf (gethash (string-upcase str-key) table) el)
         (setf (gethash kwd-key table) el)
         (with-slots (complex lower-bound upper-bound) el
           (when (and (number-type-info-integer el) lower-bound upper-bound)
