@@ -1258,6 +1258,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
     #+END_SRC
 
     Now that the appropriate entries are added into {{{hspec(*features*)}}}, the types themselves can be defined.
+    The exporting of the symbols must be done here since [[package.lisp]] where the package is defined is compiled before this file ([[numericl.lisp]]) where the entries are added to {{{hspec(*features*)}}}.
 
     #+NAME: defining-ieee-float-types
     #+BEGIN_SRC lisp -n
@@ -1292,7 +1293,8 @@ emacs --batch -l org numericl.org -f org-babel-tangle
      ,* Arguments
        + ~LOWER-LIMIT~ :: /ieee-float16/ specifying the lower limit.
        + ~UPPER-LIMIT~ :: /ieee-float16/ specifying the upper limit."
-    `(complex (ieee-float16 ,lower-limit ,upper-limit))))
+    `(complex (ieee-float16 ,lower-limit ,upper-limit)))
+  (export '(ieee-float16 complex-ieee-float16)))
 
 (eval-when #+numericl-has-ieee-float32 (:compile-toplevel)
            #-numericl-has-ieee-float32 ()
@@ -1322,9 +1324,10 @@ emacs --batch -l org numericl.org -f org-babel-tangle
      ,* Arguments
        + ~LOWER-LIMIT~ :: /ieee-float32/ specifying the lower limit.
        + ~UPPER-LIMIT~ :: /ieee-float32/ specifying the upper limit."
-    `(complex (ieee-float32 ,lower-limit ,upper-limit))))
+    `(complex (ieee-float32 ,lower-limit ,upper-limit)))
+  (export '(ieee-float32 complex-ieee-float32)))
 
-(eval-when #+numericl-has-ieee-float64 (:compile-toplevel)
+(eval-when #+numericl-has-ieee-float64 (:compile-toplevel )
            #-numericl-has-ieee-float64 ()
   (deftype ieee-float64 (&optional lower-limit upper-limit)
     "IEEE 754 float64 floating point type alias.
@@ -1352,7 +1355,8 @@ emacs --batch -l org numericl.org -f org-babel-tangle
      ,* Arguments
        + ~LOWER-LIMIT~ :: /ieee-float64/ specifying the lower limit.
        + ~UPPER-LIMIT~ :: /ieee-float64/ specifying the upper limit."
-    `(complex (ieee-float16 ,lower-limit ,upper-limit))))
+    `(complex (ieee-float16 ,lower-limit ,upper-limit)))
+  (export '(ieee-float64 complex-ieee-float64)))
 
 (eval-when #+numericl-has-ieee-float128 (:compile-toplevel)
            #-numericl-has-ieee-float128 ()
@@ -1382,7 +1386,8 @@ emacs --batch -l org numericl.org -f org-babel-tangle
      ,* Arguments
        + ~LOWER-LIMIT~ :: /ieee-float128/ specifying the lower limit.
        + ~UPPER-LIMIT~ :: /ieee-float128/ specifying the upper limit."
-    `(complex (ieee-float128 ,lower-limit ,upper-limit))))
+    `(complex (ieee-float128 ,lower-limit ,upper-limit)))
+  (export '(ieee-float128 complex-ieee-float128)))
 
 (eval-when #+numericl-has-ieee-float256 (:compile-toplevel)
            #-numericl-has-ieee-float256 ()
@@ -1412,7 +1417,8 @@ emacs --batch -l org numericl.org -f org-babel-tangle
      ,* Arguments
        + ~LOWER-LIMIT~ :: /ieee-float256/ specifying the lower limit.
        + ~UPPER-LIMIT~ :: /ieee-float256/ specifying the upper limit."
-    `(complex (ieee-float256 ,lower-limit ,upper-limit))))
+    `(complex (ieee-float256 ,lower-limit ,upper-limit)))
+  (export '(ieee-float256 complex-ieee-float256)))
     #+END_SRC
 
 *** Number Type Information
@@ -2139,7 +2145,8 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 
 *** Package Exports
 
-    The package exports for all of these aliases, which will be in ~package.lisp~ (Section [[package.lisp]]), are
+    The package exports for all of these aliases, which will be in ~package.lisp~ (Section [[package.lisp]]), are below.
+    Note that the IEEE 754 floating point alias types cannot be exported here since this file is compiled before [[numericl.lisp]] where the appropriate entries are added to {{{hspec(features)}}}.
 
     #+NAME: export-numerical-aliases
     #+BEGIN_SRC lisp -n
@@ -2182,16 +2189,6 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 #:complex-single-float
 #:complex-double-float
 #:complex-long-float
-#+numericl-has-ieee-float16 :ieee-float16
-#+numericl-has-ieee-float32 :ieee-float32
-#+numericl-has-ieee-float64 :ieee-float64
-#+numericl-has-ieee-float128 :ieee-float128
-#+numericl-has-ieee-float256 :ieee-float256
-#+numericl-has-ieee-float16 :complex-ieee-float16
-#+numericl-has-ieee-float32 :complex-ieee-float32
-#+numericl-has-ieee-float64 :complex-ieee-float64
-#+numericl-has-ieee-float128 :complex-ieee-float128
-#+numericl-has-ieee-float256 :complex-ieee-float256
 #:get-upgraded-array-element-type
 #:number-type-info
 #:number-type-info-type
@@ -4232,7 +4229,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
    #+END_SRC
 
 
-** Final numerical.lisp File
+** Final numerical.lisp File <<numericl.lisp>>
 
    The final =numerical.lisp= file where all major code belongs in is
 
