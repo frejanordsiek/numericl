@@ -1,3 +1,9 @@
+# Generated files
 *.fasl
+*.tex
+*.html
+*.svg
+*.pdf
 
+# Autosaves.
 *~
