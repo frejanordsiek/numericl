@@ -3565,18 +3565,18 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 (defun normal-row-major-to-indices-as-list (arr row-major-index)
   "Turns a row-major index into a list of indices for the individual axes.
 
-   Arguments
-   + ~ARR~ :: /array/ or /view/
-   + ~ROW-MAJOR-INDEX~ :: /array-flat-index-integer/ that should be converted.
+   ,* Arguments
+     + ~ARR~ :: /array/ or /view/
+     + ~ROW-MAJOR-INDEX~ :: /array-flat-index-integer/ that should be converted.
 
-   Returns
-   + ~INDICES~ :: /list/ of /array-index-integer/ containing the sub-indices for
-     each axis.
+   ,* Returns
+     + ~INDICES~ :: /list/ of /array-index-integer/ containing the sub-indices
+       for each axis.
 
-   Uncorrectable Errors
-   + /index-type-error/ :: If ~ROW-MAJOR-INDEX~ is the wrong type.
-   + /index-out-of-bounds-error/ :: If ~ROW-MAJOR-INDEX~ is too large for
-     ~ARR~."
+   ,* Uncorrectable Errors
+     + /index-type-error/ :: If ~ROW-MAJOR-INDEX~ is the wrong type.
+     + /index-out-of-bounds-error/ :: If ~ROW-MAJOR-INDEX~ is too large for
+       ~ARR~."
   (cond ((not (typep row-major-index 'array-flat-index-integer))
          (error 'index-type-error :index row-major-index :kind :flat))
         ((>= row-major-index (varray-total-size arr))
@@ -3592,18 +3592,18 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 (defun normal-row-major-to-indices-as-vec (arr row-major-index)
   "Turns a row-major index into a list of indices for the individual axes.
 
-   Arguments
-   + ~ARR~ :: /array/ or /view/
-   + ~ROW-MAJOR-INDEX~ :: /array-flat-index-integer/ that should be converted.
+   ,* Arguments
+     + ~ARR~ :: /array/ or /view/
+     + ~ROW-MAJOR-INDEX~ :: /array-flat-index-integer/ that should be converted.
 
-   Returns
-   + ~INDICES~ :: /(simple-array array-index-integer 1)/ containing the
-     sub-indices for each axis.
+   ,* Returns
+     + ~INDICES~ :: /(simple-array array-index-integer 1)/ containing the
+       sub-indices for each axis.
 
-   Uncorrectable Errors
-   + /index-type-error/ :: If ~ROW-MAJOR-INDEX~ is the wrong type.
-   + /index-out-of-bounds-error/ :: If ~ROW-MAJOR-INDEX~ is too large for
-     ~ARR~."
+   ,* Uncorrectable Errors
+     + /index-type-error/ :: If ~ROW-MAJOR-INDEX~ is the wrong type.
+     + /index-out-of-bounds-error/ :: If ~ROW-MAJOR-INDEX~ is too large for
+       ~ARR~."
   (cond ((not (typep row-major-index 'array-flat-index-integer))
          (error 'index-type-error :index row-major-index :kind :flat))
         ((>= row-major-index (varray-total-size arr))
@@ -3621,16 +3621,16 @@ emacs --batch -l org numericl.org -f org-babel-tangle
   "Turns a row-major index into a list of indices for the individual axes with
    broadcasting.
 
-   Arguments
-   + ~ARR~ :: /array/ or /view/
-   + ~ROW-MAJOR-INDEX~ :: /integer/ that should be converted.
+   ,* Arguments
+     + ~ARR~ :: /array/ or /view/
+     + ~ROW-MAJOR-INDEX~ :: /integer/ that should be converted.
 
-   Returns
-   + ~INDICES~ :: /list/ of /array-index-integer/ containing the sub-indices for
-     each axis.
+   ,* Returns
+     + ~INDICES~ :: /list/ of /array-index-integer/ containing the sub-indices
+       for each axis.
 
-   Uncorrectable Errors
-   + /index-type-error/ :: If ~ROW-MAJOR-INDEX~ is the wrong type."
+   ,* Uncorrectable Errors
+     + /index-type-error/ :: If ~ROW-MAJOR-INDEX~ is the wrong type."
   (if (integerp row-major-index)
       (let ((row-major-index (mod row-major-index (varray-total-size arr))))
         (map 'list #'(lambda (stride) (truncate row-major-index stride))
@@ -3645,16 +3645,16 @@ emacs --batch -l org numericl.org -f org-babel-tangle
   "Turns a row-major index into a list of indices for the individual axes with
    broadcasting.
 
-   Arguments
-   + ~ARR~ :: /array/ or /view/
-   + ~ROW-MAJOR-INDEX~ :: /integer/ that should be converted.
+   ,* Arguments
+     + ~ARR~ :: /array/ or /view/
+     + ~ROW-MAJOR-INDEX~ :: /integer/ that should be converted.
 
-   Returns
-   + ~INDICES~ :: /(simple-array array-index-integer 1)/ containing the
-     sub-indices for each axis.
+   ,* Returns
+     + ~INDICES~ :: /(simple-array array-index-integer 1)/ containing the
+       sub-indices for each axis.
 
-   Uncorrectable Errors
-   + /index-type-error/ :: If ~ROW-MAJOR-INDEX~ is the wrong type."
+   ,* Uncorrectable Errors
+     + /index-type-error/ :: If ~ROW-MAJOR-INDEX~ is the wrong type."
   (if (integerp row-major-index)
       (let ((row-major-index (mod row-major-index (varray-total-size arr))))
         (map '(vector array-index-integer)
@@ -3686,22 +3686,22 @@ emacs --batch -l org numericl.org -f org-babel-tangle
   "Turns a /list/ of indices for the indidual axes into the ultimately
    underlying array and the corresponding row-major index, without broadcasting.
 
-   Arguments
-   + ~ARR~ :: /array/ or /view/
-   + ~INDICES~ :: /list/ of /array-index-integer/ containing the sub-indices
-     for each axis.
+   ,* Arguments
+     + ~ARR~ :: /array/ or /view/
+     + ~INDICES~ :: /list/ of /array-index-integer/ containing the sub-indices
+       for each axis.
 
-   Returns
-   + ~UNDER-ARRAY~ :: The ultimate underlying /array/ of ~ARR~.
-   + ~UNDER-ROW-MAJOR-INDEX~ :: The /array-flat-index-integer/ index into
-     ~UNDER-ARRAY~ corresponding to ~INDICES~.
+   ,* Returns
+     + ~UNDER-ARRAY~ :: The ultimate underlying /array/ of ~ARR~.
+     + ~UNDER-ROW-MAJOR-INDEX~ :: The /array-flat-index-integer/ index into
+       ~UNDER-ARRAY~ corresponding to ~INDICES~.
 
-   Uncorrectable Errors
-   + /type-error/ :: If ~ARR~ is not an /array/ or /view/ or ~INDICES~ is not a
-     /list/.
-   + /index-type-error/ :: If an element of ~INDICES~ is the wrong type.
-   + /index-out-of-bounds-error/ :: If an element of ~INDICES~ is too large for
-     ~ARR~."
+   ,* Uncorrectable Errors
+     + /type-error/ :: If ~ARR~ is not an /array/ or /view/ or ~INDICES~ is not
+       a /list/.
+     + /index-type-error/ :: If an element of ~INDICES~ is the wrong type.
+     + /index-out-of-bounds-error/ :: If an element of ~INDICES~ is too large
+       for ~ARR~."
   (etypecase arr
     (array (values arr (normal-underlying-row-major-index-from-list arr indices)))
     (view
@@ -3718,22 +3718,22 @@ emacs --batch -l org numericl.org -f org-babel-tangle
   "Turns a /vector/ of indices for the indidual axes into the ultimately
    underlying array and the corresponding row-major index, without broadcasting.
 
-   Arguments
-   + ~ARR~ :: /array/ or /view/
-   + ~INDICES~ :: /vector/ of /array-index-integer/ containing the sub-indices
-     for each axis.
+   ,* Arguments
+     + ~ARR~ :: /array/ or /view/
+     + ~INDICES~ :: /vector/ of /array-index-integer/ containing the sub-indices
+       for each axis.
 
-   Returns
-   + ~UNDER-ARRAY~ :: The ultimate underlying /array/ of ~ARR~.
-   + ~UNDER-ROW-MAJOR-INDEX~ :: The /array-flat-index-integer/ index into
-     ~UNDER-ARRAY~ corresponding to ~INDICES~.
+   ,* Returns
+     + ~UNDER-ARRAY~ :: The ultimate underlying /array/ of ~ARR~.
+     + ~UNDER-ROW-MAJOR-INDEX~ :: The /array-flat-index-integer/ index into
+       ~UNDER-ARRAY~ corresponding to ~INDICES~.
 
-   Uncorrectable Errors
-   + /type-error/ :: If ~ARR~ is not an /array/ or /view/ or ~INDICES~ is not a
-     /vector/.
-   + /index-type-error/ :: If an element of ~INDICES~ is the wrong type.
-   + /index-out-of-bounds-error/ :: If an element of ~INDICES~ is too large for
-     ~ARR~."
+   ,* Uncorrectable Errors
+     + /type-error/ :: If ~ARR~ is not an /array/ or /view/ or ~INDICES~ is not
+       a /vector/.
+     + /index-type-error/ :: If an element of ~INDICES~ is the wrong type.
+     + /index-out-of-bounds-error/ :: If an element of ~INDICES~ is too large
+       for ~ARR~."
   (etypecase arr
     (array (values arr (normal-underlying-row-major-index-from-vec arr indices)))
     (view
@@ -3751,21 +3751,21 @@ emacs --batch -l org numericl.org -f org-babel-tangle
   "Turns a one or more index arguments for the indidual axes into the ultimately
    underlying array and the corresponding row-major index, without broadcasting.
 
-   Arguments
-   + ~ARR~ :: /array/ or /view/
-   + ~INDICES~ :: One or more /array-index-integer/ containing the sub-indices
-     for each axis.
+   ,* Arguments
+     + ~ARR~ :: /array/ or /view/
+     + ~INDICES~ :: One or more /array-index-integer/ containing the sub-indices
+       for each axis.
 
-   Returns
-   + ~UNDER-ARRAY~ :: The ultimate underlying /array/ of ~ARR~.
-   + ~UNDER-ROW-MAJOR-INDEX~ :: The /array-flat-index-integer/ index into
-     ~UNDER-ARRAY~ corresponding to ~INDICES~.
+   ,* Returns
+     + ~UNDER-ARRAY~ :: The ultimate underlying /array/ of ~ARR~.
+     + ~UNDER-ROW-MAJOR-INDEX~ :: The /array-flat-index-integer/ index into
+       ~UNDER-ARRAY~ corresponding to ~INDICES~.
 
-   Uncorrectable Errors
-   + /type-error/ :: If ~ARR~ is not an /array/ or /view/.
-   + /index-type-error/ :: If an element of ~INDICES~ is the wrong type.
-   + /index-out-of-bounds-error/ :: If an element of ~INDICES~ is too large for
-     ~ARR~."
+   ,* Uncorrectable Errors
+     + /type-error/ :: If ~ARR~ is not an /array/ or /view/.
+     + /index-type-error/ :: If an element of ~INDICES~ is the wrong type.
+     + /index-out-of-bounds-error/ :: If an element of ~INDICES~ is too large
+       for ~ARR~."
   (normal-underlying-array-with-index-from-list arr indices))
 
 (declaim (ftype (function (varray array-flat-index-integer)
@@ -3775,19 +3775,19 @@ emacs --batch -l org numericl.org -f org-babel-tangle
   "Turns a row-major index into the ultimately underlying array and the
    corresponding row-major index, without broadcasting.
 
-   Arguments
-   + ~ARR~ :: /array/ or /view/
-   + ~INDEX~ :: The /array-flat-index-integer/ row-major index into ~ARR~.
+   ,* Arguments
+     + ~ARR~ :: /array/ or /view/
+     + ~INDEX~ :: The /array-flat-index-integer/ row-major index into ~ARR~.
 
-   Returns
-   + ~UNDER-ARRAY~ :: The ultimate underlying /array/ of ~ARR~.
-   + ~UNDER-ROW-MAJOR-INDEX~ :: The /array-flat-index-integer/ index into
-     ~UNDER-ARRAY~ corresponding to ~INDEX~.
+   ,* Returns
+     + ~UNDER-ARRAY~ :: The ultimate underlying /array/ of ~ARR~.
+     + ~UNDER-ROW-MAJOR-INDEX~ :: The /array-flat-index-integer/ index into
+       ~UNDER-ARRAY~ corresponding to ~INDEX~.
 
-   Uncorrectable Errors
-   + /type-error/ :: If ~ARR~ is not an /array/ or /view/.
-   + /index-type-error/ :: If an element of ~INDEX~ is the wrong type.
-   + /index-out-of-bounds-error/ :: If ~INDEX~ is too large for ~ARR~."
+   ,* Uncorrectable Errors
+     + /type-error/ :: If ~ARR~ is not an /array/ or /view/.
+     + /index-type-error/ :: If ~INDEX~ is the wrong type.
+     + /index-out-of-bounds-error/ :: If ~INDEX~ is too large for ~ARR~."
   (etypecase arr
     (array (cond ((not (typep index 'array-flat-index-integer))
                   (error 'index-type-error :index index :kind :flat))
