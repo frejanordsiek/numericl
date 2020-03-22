@@ -217,7 +217,7 @@ and the PDF file will automatically be used instead.
   The type hierarchy is shown in Figure [[fig-number-types-inheritance-tree]].
 
   #+NAME: make-number-types-inheritance-tree-dot-file
-  #+BEGIN_SRC lisp :results silent :cache no :exports none :no-export
+  #+BEGIN_SRC lisp :results silent :cache no :exports none
 (let ((*standard-output* (make-broadcast-stream))
       (*error-output* (make-broadcast-stream)))
   (asdf:load-systems :numericl)
