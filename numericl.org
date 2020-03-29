@@ -245,7 +245,7 @@ and the PDF file will automatically be used instead.
   #+END_SRC
 
   #+NAME: draw-number-types-inheritance-tree
-  #+BEGIN_SRC dot :file images/number-types-inheritance-tree.svg :exports results :cache no :var input=make-number-types-inheritance-tree-dot-file :cmdline "-Tpdf -oimages/number-types-inheritance-tree.pdf -Tsvg"
+  #+BEGIN_SRC dot :file docs/images/number-types-inheritance-tree.svg :exports results :cache no :var input=make-number-types-inheritance-tree-dot-file :cmdline "-Tpdf -odocs/images/number-types-inheritance-tree.pdf -Tsvg"
 $input
   #+END_SRC
 
@@ -254,7 +254,7 @@ $input
   #+ATTR_LATEX: :width \textwidth
   #+ATTR_HTML: :width 100% :alt Subtype hierarchy of the various number types used in NumeriCL.
   #+RESULTS: draw-number-types-inheritance-tree
-  [[file:images/number-types-inheritance-tree.svg]]
+  [[file:docs/images/number-types-inheritance-tree.svg]]
 
 
 * Arrays
@@ -321,7 +321,7 @@ $input
   The code and documentation are weaved/combined in this file.
   The source code can be tangled (the {{{literate-programming}}} term for extracting the code) from the documentation by one of two methods.
   The file can be opened in {{{emacs}}} and then typing the keyboard sequence =C-c C-v t= (where =C= is usually the =Ctrl= key).
-  Or the following command can be run on the command line from inside the =docs= subdirectory.
+  Or the following command can be run in the same directory a =numericl.org= (base directory of source repository) on the command line.
 
   #+BEGIN_SRC shell
 emacs --batch -l org numericl.org -f org-babel-tangle
@@ -416,7 +416,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
    Putting all of these together, the complete ASDF file =numericl.asd= is made.
 
    #+NAME: numericl-dot-asd
-   #+BEGIN_SRC lisp -n :noweb yes :tangle ../numericl.asd
+   #+BEGIN_SRC lisp -n :noweb yes :tangle numericl.asd
 ;;;; numericl.asd
 
 <<copyright>>
@@ -618,7 +618,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
     The unit tests are put into a single file =tests/check-typed-list-vector-macros.lisp= file shown below,
 
     #+NAME: test-check-typed-list-vector-macros
-    #+BEGIN_SRC lisp -n :noweb yes :tangle ../tests/check-typed-list-vector-macros.lisp
+    #+BEGIN_SRC lisp -n :noweb yes :tangle tests/check-typed-list-vector-macros.lisp
 ;;;; check-typed-list-vector-macros.lisp : Test check-typed-list and co
 
 <<copyright>>
@@ -4209,7 +4209,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
    entries for the respective packages into one file.
 
    #+NAME: package-dot-lisp
-   #+BEGIN_SRC lisp -n :noweb yes :tangle ../src/package.lisp
+   #+BEGIN_SRC lisp -n :noweb yes :tangle src/package.lisp
 ;;;; package.lisp
 
 <<copyright>>
@@ -4228,7 +4228,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
    The final =numerical.lisp= file where all major code belongs in is
 
    #+NAME: numerical-dot-lisp
-   #+BEGIN_SRC lisp -n :noweb yes :tangle ../src/numerical.lisp
+   #+BEGIN_SRC lisp -n :noweb yes :tangle src/numerical.lisp
 ;;;; numerical.lisp
 
 <<copyright>>
@@ -4355,7 +4355,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
    Putting all of these together, the complete ASDF file =numericl-tests.asd= is made.
 
    #+NAME: numericl-tests-dot-asd
-   #+BEGIN_SRC lisp -n :noweb yes :tangle ../numericl-tests.asd
+   #+BEGIN_SRC lisp -n :noweb yes :tangle numericl-tests.asd
 ;;;; numericl-tests.asd
 
 <<copyright>>
