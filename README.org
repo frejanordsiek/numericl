@@ -113,10 +113,10 @@ Using listings must also be set with a bind.
 * Tangling/Extracting Code
 
   NumeriCL is written in [[https://wikipedia.org/wiki/Literate_programming][Literate Programming]] form/style using [[https://www.gnu.org/software/emacs][Emacs]] [[https://orgmode.org][Org Mode]].
-  The code and documentation are weaved/combined in the file [[file:docs/numericl.org]].
+  The code and documentation are weaved/combined in the file [[file:numericl.org]].
   The source code can be tangled (the [[https://wikipedia.org/wiki/Literate_programming][Literate Programming]] for extracting the code) from the documentation by one of two methods.
   The file can be opened in [[https://www.gnu.org/software/emacs][Emacs]] and then one types the keyboard sequence =C-c C-v t= (where =C= is usually the =Ctrl= key).
-  Or the following command can be run on the command line from inside the =docs= subdirectory.
+  Or the following command can be run on the command line from this directory.
 
   #+BEGIN_SRC shell
 emacs --batch -l org numericl.org -f org-babel-tangle
