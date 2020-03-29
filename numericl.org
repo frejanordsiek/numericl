@@ -48,6 +48,7 @@ SOFTWARE.
 #+LATEX_HEADER: \usepackage[utf8]{inputenc}
 #+LATEX_HEADER: \usepackage[a4paper,margin=1.5cm]{geometry}
 #+LATEX_HEADER: \usepackage{xcolor}
+#+LATEX_HEADER: \usepackage{natbib}
 
 #+BEGIN_COMMENT
 Have to set things up for code display with listings. Minted is straightforward
@@ -84,14 +85,19 @@ and the PDF file will automatically be used instead.
 
 #+LATEX_HEADER: \usepackage{axessibility}
 
+#+BIND: org-latex-pdf-process '("latexmk -bibtex -pdflua -pdflualatex='lualatex -interaction nonstopmode' -output-directory=%o -f %f")
+
 #+MACRO: color @@latex:\textcolor{$1}{$2}@@@@html:<span style="color: $1">$2<\span>@@
 
 #+MACRO: literate-programming [[https://wikipedia.org/wiki/Literate_programming][Literate Programming]]
 #+MACRO: emacs [[https://www.gnu.org/software/emacs][Emacs]]
 #+MACRO: orgmode [[https://orgmode.org][Org Mode]]
+#+MACRO: org-ref [[https://github.com/jkitchin/org-ref][org-ref]]
 #+MACRO: graphviz [[https://graphviz.org][Graphviz]]
 #+MACRO: latex [[https://www.latex-project.org][LaTeX]]
-#+MACRO: lualatex [[http://http://www.luatex.org][LuaLaTeX]]
+#+MACRO: lualatex [[http://www.luatex.org][LuaLaTeX]]
+#+MACRO: bibtex [[https://www.ctan.org/pkg/bibtex][BibTeX]]
+#+MACRO: latexmk [[https://www.ctan.org/pkg/latexmk][latexmk]]
 
 #+MACRO: asdf [[https://common-lisp.net/project/asdf][ASDF]]
 #+MACRO: numpy [[https://www.numpy.org][NumPy]]
@@ -167,13 +173,14 @@ SOFTWARE.
 
   + {{{emacs}}} with the following packages:
     + {{{orgmode}}}
+    + {{{org-ref}}}
 
   Building the documentation requires:
 
   + {{{emacs}}} with the following packages:
     + {{{orgmode}}}
   + {{{graphviz}}}
-  + If doing PDF export, {{{lualatex}}} with the following packages:
+  + If doing PDF export; {{{lualatex}}}, {{{bibtex}}}, and {{{latexmk}}} with the following packages:
     + axessibility
     + amsmath
     + amssymb
@@ -186,6 +193,7 @@ SOFTWARE.
     + inputenc
     + listings
     + longtable
+    + natbib
     + rotating
     + textcomp
     + ulem
@@ -345,7 +353,7 @@ $input
 
 * Code
 
-** Tangling/Extracting The Code
+** Tangling/Extracting The Code <<tangling>>
 
   NumeriCL is written in {{{literate-programming}}} form/style using {{{emacs}}} {{{orgmode}}}.
   The code and documentation are weaved/combined in this file.
@@ -1200,7 +1208,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 
     IEEE 754 floating point types are used by many implementations.
     But; {{{hspec(short-float)}}}, {{{hspec(single-float)}}}, {{{hspec(double-float)}}}, and {{{hspec(long-float)}}} aren't required to follow IEEE 784, let alone map to float16, float32, float64, and float128 respectively.
-    This means we {{{hspec(*features*)}}} for ~:ieee-floating-point~ and check if the have to check each floating point type one by one to see if they match the following parameters obtained from [[https://en.wikipedia.org/wiki/IEEE_754]].
+    This means we {{{hspec(*features*)}}} for ~:ieee-floating-point~ and check if the have to check each floating point type one by one to see if they match the following parameters obtained from Table 3.5 in citet:IEEE-754-2008 (see [[https://en.wikipedia.org/wiki/IEEE_754]] if you can't access).
     Note that the number of bits in the exponents is increased by one here to reflect that the significand returned by {{{hspec(decode-float)}}} is between 0 and 1 instead of 1 and 2.
 
     #+NAME: table-ieee-float-matching
@@ -1241,7 +1249,8 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 ;;; up the radix, digits, exponent of the most positive finite value, and the
 ;;; exponent of the least positive normalized value in a table.
 ;;;
-;;; Values in the table gotten from https://en.wikipedia.org/wiki/IEEE_754 with
+;;; Values in the table gotten from DOI: 10.1109/IEEESTD.2008.4610935 (see
+;;; https://en.wikipedia.org/wiki/IEEE_754 if you can't access) with
 ;;; the number of bits in the exponents increased by one to reflect that the
 ;;; significand returned by decode-float is between 0 and 1 instead of 1 and 2.
 
@@ -4436,3 +4445,31 @@ emacs --batch -l org numericl.org -f org-babel-tangle
      All 1 file passed.
    #+end_example
 
+* Bibliography
+
+  The {{{bibtex}}} entries for this package are shown below.
+  [[tangling][Tangling]] this file extracts it to =docs/numericl.bib=.
+
+  #+NAME: numericl-dot-bib
+  #+BEGIN_SRC bib :results none :eval never :exports code :tangle docs/numericl.bib
+@Article{IEEE-754-2008,
+  title    = {{IEEE} Standard for Floating-Point Arithmetic},
+  journal  = {IEEE Std 754-2008},
+  year     = {2008},
+  pages    = {1-70},
+  month    = {Aug},
+  abstract = {This standard specifies interchange and arithmetic formats and methods for binary and decimal floating-point arithmetic in computer programming environments. This standard specifies exception conditions and their default handling. An implementation of a floating-point system conforming to this standard may be realized entirely in software, entirely in hardware, or in any combination of software and hardware. For operations specified in the normative part of this standard, numerical results and exceptions are uniquely determined by the values of the input data, sequence of operations, and destination formats, all under user control.},
+  doi      = {10.1109/IEEESTD.2008.4610935},
+  keywords = {floating point arithmetic;IEEE standards;programming;IEEE standard;decimal floating-point arithmetic;computer programming;arithmetic formats;IEEE Standards;Floating-point arithmetic;Microprocessors;Software;Hardware;Trademarks;754-2008;arithmetic;binary;computer;decimal;exponent;floating-point;format;interchange;NaN;number;rounding;significand;subnormal},
+}
+  #+END_SRC
+
+
+bibliographystyle:plainnat
+bibliography:docs/numericl.bib
+
+
+
+# Local Variables:
+# org-latex-pdf-process: ("latexmk -bibtex -pdflua -pdflualatex='lualatex -interaction nonstopmode' -output-directory=%o -f %f")
+# End:

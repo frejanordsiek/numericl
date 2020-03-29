@@ -4,6 +4,7 @@
 *.html
 *.svg
 *.pdf
+*.bbl
 
 # Autosaves.
 *~
