@@ -300,7 +300,7 @@ SOFTWARE.
   #+END_SRC
 
   #+NAME: draw-number-types-inheritance-tree
-  #+BEGIN_SRC dot :file docs/images/number-types-inheritance-tree.svg :exports results :cache no :var input=make-number-types-inheritance-tree-dot-file :cmdline "-Tpdf -odocs/images/number-types-inheritance-tree.pdf -Tsvg"
+  #+BEGIN_SRC dot :file images/number-types-inheritance-tree.svg :exports results :cache no :var input=make-number-types-inheritance-tree-dot-file :cmdline "-Tpdf -oimages/number-types-inheritance-tree.pdf -Tsvg"
 $input
   #+END_SRC
 
@@ -309,7 +309,7 @@ $input
   #+ATTR_LATEX: :width \textwidth
   #+ATTR_HTML: :width 100% :alt Subtype hierarchy of the various number types used in NumeriCL.
   #+RESULTS: draw-number-types-inheritance-tree
-  [[file:docs/images/number-types-inheritance-tree.svg]]
+  [[file:images/number-types-inheritance-tree.svg]]
 
 
 * Arrays
@@ -4452,10 +4452,10 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 * Bibliography
 
   The {{{bibtex}}} entries for this package are shown below.
-  [[tangling][Tangling]] this file extracts it to =docs/numericl.bib=.
+  [[tangling][Tangling]] this file extracts it to =numericl.bib=.
 
   #+NAME: numericl-dot-bib
-  #+BEGIN_SRC bib :results none :eval never :exports code :tangle docs/numericl.bib
+  #+BEGIN_SRC bib :results none :eval never :exports code :tangle numericl.bib
 @Article{IEEE-754-2008,
   title    = {{IEEE} Standard for Floating-Point Arithmetic},
   journal  = {IEEE Std 754-2008},
@@ -4470,7 +4470,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
 
 
 bibliographystyle:plainnat
-bibliography:docs/numericl.bib
+bibliography:numericl.bib
 
 
 
