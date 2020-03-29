@@ -6,4 +6,4 @@
 *.org text
 *.lisp text
 *.asd text
-*.txt text eol=crlf
+*.txt text
