@@ -269,6 +269,22 @@ SOFTWARE.
   But /complex-number/ includes only {{{hspec(complex)}}} and things that get converted to real when their imaginary part is zero ({{{hspec(rational)}}}).
   In a sense, /complex-number/ is strictly complex.
 
+  The specifications for the IEEE floating point formats are shown in Table [[table-ieee-float-specification]], which come from Table 3.5 in citet:IEEE-754-2008 (see [[https://en.wikipedia.org/wiki/IEEE_754]] if you can't access).
+  16, 32, 64, and 128 bit formats are defined explicitly; and defined algorithmically for higher number of bits /k/ where /k/ must be a multiple of 32 greater than 128.
+
+  #+NAME: table-ieee-float-specification
+  #+CAPTION: The radix, number of digits, exponents of the most positive values, and exponents of the least positive normalized value of the IEEE 754 floating point formats.
+  #+ATTR_HTML: :border 2 :rules all :frame border
+  #+ATTR_LATEX: :float t
+  | Type     | Radix |                      Number of Digits (p) | Exp. of Most Pos. (e_{max}) | Exp. of Least Pos. Norm. (e_{min}) |
+  |----------+-------+-------------------------------------------+-----------------------------+------------------------------------|
+  | float16  |     2 |                                        11 |                          15 |                                -14 |
+  | float32  |     2 |                                        24 |                         127 |                               -126 |
+  | float64  |     2 |                                        53 |                        1023 |                              -1022 |
+  | float128 |     2 |                                       113 |                       16383 |                             -16382 |
+  | float{k} |     2 | $k - \mathrm{round}{(4 \log_2{(k)}) + 1}$ |       $2^{(k - p - 1)} - 1$ |                     $-e_{max} + 1$ |
+  | float256 |     2 |                                       237 |                      262143 |                            -262142 |
+
   Some functions and macros require the desired type to be passed.
   They can also be given the type as a {{{hspec(string)}}} (either all lower-case or all upper-case) or {{{hspec(keyword)}}}, though obviously they cannot take arguments in this form.
 
@@ -1207,30 +1223,9 @@ emacs --batch -l org numericl.org -f org-babel-tangle
     #+END_SRC
 
     IEEE 754 floating point types are used by many implementations.
-    But; {{{hspec(short-float)}}}, {{{hspec(single-float)}}}, {{{hspec(double-float)}}}, and {{{hspec(long-float)}}} aren't required to follow IEEE 784, let alone map to float16, float32, float64, and float128 respectively.
-    This means we {{{hspec(*features*)}}} for ~:ieee-floating-point~ and check if the have to check each floating point type one by one to see if they match the following parameters obtained from Table 3.5 in citet:IEEE-754-2008 (see [[https://en.wikipedia.org/wiki/IEEE_754]] if you can't access).
+    But; {{{hspec(short-float)}}}, {{{hspec(single-float)}}}, {{{hspec(double-float)}}}, and {{{hspec(long-float)}}} aren't required to follow IEEE 754, let alone map to float16, float32, float64, and float128 respectively.
+    This means we check {{{hspec(*features*)}}} for ~:ieee-floating-point~ and check each floating point type one by one to see if they match Table [[table-ieee-float-specification]].
     Note that the number of bits in the exponents is increased by one here to reflect that the significand returned by {{{hspec(decode-float)}}} is between 0 and 1 instead of 1 and 2.
-
-    #+NAME: table-ieee-float-matching
-    #+CAPTION: The radix, number of digits
-    #+ATTR_HTML: :border 2 :rules all :frame border
-    #+ATTR_LATEX: :float t
-    | Type                        | Radix |                      Number of Digits (p) | Most Positive Exponent (e_{max}) | Least Positive Normalized Exponent (e_{min}) |
-    |-----------------------------+-------+-------------------------------------------+----------------------------------+----------------------------------------------|
-    | float16                     |     2 |                                        11 |                               15 |                                          -14 |
-    | float32                     |     2 |                                        24 |                              127 |                                         -126 |
-    | float64                     |     2 |                                        53 |                             1023 |                                        -1022 |
-    | float128                    |     2 |                                       113 |                            16383 |                                       -16382 |
-    | float{k} [fn:ieee-floatk]   |     2 | $k - \mathrm{round}{(4 \log_2{(k)}) + 1}$ |            $2^{(k - p - 1)} - 1$ |                               $-e_{max} + 1$ |
-    | float256 [fn:ieee-float256] |     2 |                                       237 |                           262143 |                                      -262142 |
-
-
-[fn:ieee-floatk] Where /k/ > 128 is the number of bits.
-
-
-[fn:ieee-float256] With /k/ set to 256.
-
-
     This will be done using {{{hspec(float-radix)}}}, {{{hspec(float-digits)}}}, and {{{hspec(decode-float)}}}.
 
     First, we define entries in {{{hspec(*features*)}}} (during compilation, loading, and executing) for each match between CL and IEEE 754 floating point types.
