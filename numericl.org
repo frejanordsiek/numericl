@@ -69,6 +69,7 @@ Using listings must also be set with a bind.
 #+LATEX_HEADER: \definecolor{mygreyblue}{rgb}{0.3,0.3,0.5}
 #+LATEX_HEADER: \let\OldLstset\lstset
 #+LATEX_HEADER: \renewcommand{\lstset}[1]{\OldLstset{columns=[c]fixed,basicstyle=\scriptsize\ttfamily,numbers=left,showstringspaces=false,showspaces=false,frame=single,keepspaces=true,numbersep=10pt,numberstyle=\tiny,commentstyle=\color{mygreyblue}\scriptsize\ttfamily\itshape,keywordstyle=\color{mygreen}\scriptsize\ttfamily\bfseries,stringstyle=\color{myred}\scriptsize\ttfamily,identifierstyle=\color{myblue}\scriptsize\ttfamily,#1}}
+#+LATEX_HEADER: \lstalias{shell}{sh}
 
 #+BEGIN_COMMENT
 Vector graphics figures are generated in both SVG and PDF, but due to
