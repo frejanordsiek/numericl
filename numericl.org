@@ -4462,9 +4462,7 @@ emacs --batch -l org numericl.org -f org-babel-tangle
   year     = {2008},
   pages    = {1-70},
   month    = {Aug},
-  abstract = {This standard specifies interchange and arithmetic formats and methods for binary and decimal floating-point arithmetic in computer programming environments. This standard specifies exception conditions and their default handling. An implementation of a floating-point system conforming to this standard may be realized entirely in software, entirely in hardware, or in any combination of software and hardware. For operations specified in the normative part of this standard, numerical results and exceptions are uniquely determined by the values of the input data, sequence of operations, and destination formats, all under user control.},
   doi      = {10.1109/IEEESTD.2008.4610935},
-  keywords = {floating point arithmetic;IEEE standards;programming;IEEE standard;decimal floating-point arithmetic;computer programming;arithmetic formats;IEEE Standards;Floating-point arithmetic;Microprocessors;Software;Hardware;Trademarks;754-2008;arithmetic;binary;computer;decimal;exponent;floating-point;format;interchange;NaN;number;rounding;significand;subnormal},
 }
   #+END_SRC
 
