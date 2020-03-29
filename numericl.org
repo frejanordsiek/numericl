@@ -1215,13 +1215,21 @@ emacs --batch -l org numericl.org -f org-babel-tangle
     #+CAPTION: The radix, number of digits
     #+ATTR_HTML: :border 2 :rules all :frame border
     #+ATTR_LATEX: :float t
-    | Type     | Radix | Number of Digits | Most Positive Exponent | Least Positive Normalized Exponent |
-    |----------+-------+------------------+------------------------+------------------------------------|
-    | float16  |     2 |               11 |                     15 |                                -14 |
-    | float32  |     2 |               24 |                    127 |                               -126 |
-    | float64  |     2 |               53 |                   1023 |                              -1022 |
-    | float128 |     2 |              113 |                  16383 |                             -16382 |
-    | float256 |     2 |              237 |                 262143 |                            -262142 |
+    | Type                        | Radix |                      Number of Digits (p) | Most Positive Exponent (e_{max}) | Least Positive Normalized Exponent (e_{min}) |
+    |-----------------------------+-------+-------------------------------------------+----------------------------------+----------------------------------------------|
+    | float16                     |     2 |                                        11 |                               15 |                                          -14 |
+    | float32                     |     2 |                                        24 |                              127 |                                         -126 |
+    | float64                     |     2 |                                        53 |                             1023 |                                        -1022 |
+    | float128                    |     2 |                                       113 |                            16383 |                                       -16382 |
+    | float{k} [fn:ieee-floatk]   |     2 | $k - \mathrm{round}{(4 \log_2{(k)}) + 1}$ |            $2^{(k - p - 1)} - 1$ |                               $-e_{max} + 1$ |
+    | float256 [fn:ieee-float256] |     2 |                                       237 |                           262143 |                                      -262142 |
+
+
+[fn:ieee-floatk] Where /k/ > 128 is the number of bits.
+
+
+[fn:ieee-float256] With /k/ set to 256.
+
 
     This will be done using {{{hspec(float-radix)}}}, {{{hspec(float-digits)}}}, and {{{hspec(decode-float)}}}.
 
